@@ -49,18 +49,9 @@ void	addback_token(t_token **lst, enum e_tokentype type, char *content)
 	last->next = new_token(type, content);
 }
 
-char	*word(char *str, size_t *j)
+char	*word(char *str, size_t *spc)
 {
-	while (str[*j] && str[*j] != ' ')
-		(*j)++;
-	return (ft_substr(str, 0, *j));
-}
 
-char	*quote(char *str, char quote, size_t *j)
-{
-	while (str[*j] && str[*j] != quote)
-		(*j)++;
-	return ((*j) += 2, ft_substr(str, 0, *j - 2));
 }
 
 void	print_token(t_token *lst)
@@ -70,64 +61,44 @@ void	print_token(t_token *lst)
 		if (lst->type == WORD || lst->type == Q_WORD)
 			printf("%s\n", lst->content);
 		if (lst->type == I_FILE)
-			printf("Infile\n");
+			printf("Input :%s\n", lst->content);
 		if (lst->type == O_FILE_APPEND)
-			printf("Append\n");
+			printf("Append :%s\n", lst->content);
 		if (lst->type == O_FILE_TRUNC)
-			printf("Truncate\n");
+			printf("Trunc :%s\n", lst->content);
 		if (lst->type == HEREDOC)
-			printf("Heredoc\n");
+			printf("Heredoc :%s\n", lst->content);
 		if (lst->type == PIPE)
-			printf("Pipe\n");
+			printf("%s\n", lst->content);
 		lst = lst->next;
 	}
 }
 
-void	parser(t_token *lst)
+int	is_operator(char *str)
 {
-	
+	if (str[0] == '>' && str[1] == '>')
+		return (1);
+	else if (str[0] == '<' && str[1] == '<')
+		return (2);
+	else if (str[0] == '>')
+		return (3);
+	else if (str[0] == '<')
+		return (4);
+	else if (str[0] == '|')
+		return (5);
+	return (0);
 }
 
 void	lexer(char *str)
 {
-	size_t	i;
 	size_t	j;
 	t_token	*lst;
 
-	i = 0;
 	j = 0;
 	lst = NULL;
-	while (str[i])
+	while (str[j])
 	{
-		if (str[i] == ' ')
-			;
-		else if (str[i] == '>' && str[i + 1] == '>')
-		{
-			addback_token(&lst, O_FILE_APPEND, NULL);
-			i++;
-		}
-		else if (str[i] == '<' && str[i + 1] == '<')
-		{
-			addback_token(&lst, HEREDOC, NULL);
-			i++;
-		}
-		else if (str[i] == '\'')
-			addback_token(&lst, Q_WORD, quote(str + i + 1, '\'', &j));
-		else if (str[i] == '\"')
-			addback_token(&lst, Q_WORD, quote(str + i + 1, '\"', &j));
-		else if (str[i] == '>')
-			addback_token(&lst, O_FILE_TRUNC, NULL);
-		else if (str[i] == '<')
-			addback_token(&lst, I_FILE, NULL);
-		else if (str[i] == '|')
-			addback_token(&lst, PIPE, NULL);
-		else
-			addback_token(&lst, WORD, word(str + i, &j));
-		if (j)
-			i += j;
-		else
-			i++;
-		j = 0;
+
 	}
 	print_token(lst);
 }
