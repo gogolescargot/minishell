@@ -15,12 +15,14 @@
 
 # include <stdio.h>
 # include <stdlib.h>
+# include <stdbool.h>
 # include <readline/readline.h>
 # include <readline/history.h>
 # include "../libft/inc/libft.h"
 
 enum e_tokentype
 {
+	NONE,
 	WORD,
 	Q_WORD,
 	HEREDOC,
@@ -35,6 +37,7 @@ typedef struct s_token
 	enum e_tokentype	type;
 	char				*content;
 	struct s_token		*next;
+	struct s_token		*prev;
 }	t_token;
 
 void	lexer(char *str);

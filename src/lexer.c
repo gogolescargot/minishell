@@ -21,6 +21,7 @@ t_token	*new_token(enum e_tokentype type, char *content)
 		return (NULL);
 	head->type = type;
 	head->content = content;
+	head->prev = NULL;
 	head->next = NULL;
 	return (head);
 }
@@ -47,11 +48,127 @@ void	addback_token(t_token **lst, enum e_tokentype type, char *content)
 	}
 	last = last_token(*lst);
 	last->next = new_token(type, content);
+	last->next->prev = last;
+}
+
+bool	is_space(char c)
+{
+	return (ft_strchr(" \t\v", c));
+}
+
+enum e_tokentype	is_operator(char *str)
+{
+	if (str[0] == '>' && str[1] == '>')
+		return (O_FILE_APPEND);
+	else if (str[0] == '<' && str[1] == '<')
+		return (HEREDOC);
+	else if (str[0] == '>')
+		return (O_FILE_TRUNC);
+	else if (str[0] == '<')
+		return (I_FILE);
+	else if (str[0] == '|')
+		return (PIPE);
+	else if (str[0] != ' ')
+		return (WORD);
+	return (NONE);
 }
 
 char	*word(char *str, size_t *spc)
 {
+	size_t	len;
+	int		quoted;
 
+	len = 0;
+	quoted = 0;
+	while (str[*spc] && is_space(str[*spc]))
+		(*spc)++;
+	while (str[*spc] && !(((is_operator(str + *spc) != NONE
+					&& is_operator(str + *spc) != WORD)
+				|| is_space(str[*spc])) && !quoted))
+	{
+		if (str[*spc] == '\'' && quoted == 0)
+			quoted = 1;
+		else if (str[*spc] == '\'' && quoted == 1)
+			quoted = 0;
+		else if (str[*spc] == '\"' && quoted == 0)
+			quoted = 2;
+		else if (str[*spc] == '\"' && quoted == 2)
+			quoted = 0;
+		len++;
+		(*spc)++;
+	}
+	if (!len)
+		return (NULL);
+	return (ft_substr(str, *spc - len, len));
+}
+
+bool	check_word(char *str)
+{
+	int		quoted;
+	size_t	i;
+
+	quoted = 0;
+	i = 0;
+	if (!str)
+		return (false);
+	while (str[i])
+	{
+		if (str[i] == '\'' && quoted == 0)
+			quoted = 1;
+		else if (str[i] == '\'' && quoted == 1)
+			quoted = 0;
+		else if (str[i] == '\"' && quoted == 0)
+			quoted = 2;
+		else if (str[i] == '\"' && quoted == 2)
+			quoted = 0;
+		i++;
+	}
+	return (quoted == 0);
+}
+
+bool	check_pipe_prev(t_token *lst)
+{
+	while (lst)
+	{
+		if (lst->type == WORD)
+			return (true);
+		lst = lst->prev;
+	}
+	return (false);
+}
+
+bool	check_pipe_next(t_token *lst)
+{
+	while (lst)
+	{
+		if (lst->type == WORD)
+			return (true);
+		lst = lst->next;
+	}
+	return (false);
+}
+
+bool	check_pipe(t_token *lst)
+{
+	return (check_pipe_prev(lst) && check_pipe_next(lst));
+}
+
+int	check_token(t_token *lst)
+{
+	if (!lst)
+		return (-1);
+	while (lst)
+	{
+		if (lst->type == PIPE && !check_pipe(lst))
+			return (1);
+		else if (lst->type != NONE
+			&& lst->type != PIPE && !check_word(lst->content))
+			return (2);
+		else if (lst->type == NONE)
+			return (3);
+		lst = lst->next;
+	}
+	return (0);
 }
 
 void	print_token(t_token *lst)
@@ -59,7 +176,7 @@ void	print_token(t_token *lst)
 	while (lst)
 	{
 		if (lst->type == WORD || lst->type == Q_WORD)
-			printf("%s\n", lst->content);
+			printf("Word :%s\n", lst->content);
 		if (lst->type == I_FILE)
 			printf("Input :%s\n", lst->content);
 		if (lst->type == O_FILE_APPEND)
@@ -69,36 +186,55 @@ void	print_token(t_token *lst)
 		if (lst->type == HEREDOC)
 			printf("Heredoc :%s\n", lst->content);
 		if (lst->type == PIPE)
-			printf("%s\n", lst->content);
+			printf("Pipe :%s\n", lst->content);
 		lst = lst->next;
 	}
 }
 
-int	is_operator(char *str)
+void	print_error(int code)
 {
-	if (str[0] == '>' && str[1] == '>')
-		return (1);
-	else if (str[0] == '<' && str[1] == '<')
-		return (2);
-	else if (str[0] == '>')
-		return (3);
-	else if (str[0] == '<')
-		return (4);
-	else if (str[0] == '|')
-		return (5);
-	return (0);
+	if (code == 1)
+		printf("Missing Pipe Argument or quotes\n");
+	else if (code == 2)
+		printf("Missing quote\n");
+	else if (code == 3)
+		printf("Token error\n");
+	else if (code == -1)
+		printf("Malloc error\n");
 }
 
 void	lexer(char *str)
 {
-	size_t	j;
-	t_token	*lst;
+	size_t				j;
+	t_token				*lst;
+	enum e_tokentype	type;
 
 	j = 0;
 	lst = NULL;
 	while (str[j])
 	{
-
+		type = is_operator(str + j);
+		if (type == O_FILE_APPEND || type == HEREDOC)
+		{
+			j += 2;
+			addback_token(&lst, type, word(str, &j));
+		}
+		else if (type == WORD)
+		{
+			addback_token(&lst, WORD, word(str, &j));
+		}
+		else if (type != NONE)
+		{
+			j += 1;
+			if (type == PIPE)
+				addback_token(&lst, type, NULL);
+			else
+				addback_token(&lst, type, word(str, &j));
+		}
+		else
+			j++;
 	}
 	print_token(lst);
+	j = check_token(lst);
+	print_error(j);
 }

@@ -12,7 +12,7 @@
 
 #include "../inc/minishell.h"
 
-int main(void)
+int	main(void)
 {
 	char	*line;
 
