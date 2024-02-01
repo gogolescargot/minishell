@@ -28,7 +28,7 @@ NAME_B	=
 
 LIBFT	=	$(LIBFT_DIR)libft.a
 
-FILE_C	=	minishell lexer
+FILE_C	=	minishell lexer expander
 
 FILE_H	=	minishell
 

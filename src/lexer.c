@@ -56,6 +56,23 @@ bool	is_space(char c)
 	return (ft_strchr(" \t\v", c));
 }
 
+bool	is_quote(char c)
+{
+	return (ft_strchr("\"\'", c));
+}
+
+void	is_quoted(char c, int *quoted)
+{
+	if (c == '\"' && *quoted == 0)
+		*quoted = 1;
+	else if (c == '\"' && *quoted == 1)
+		*quoted = 0;
+	else if (c == '\'' && *quoted == 0)
+		*quoted = 2;
+	else if (c == '\'' && *quoted == 2)
+		*quoted = 0;
+}
+
 enum e_tokentype	is_operator(char *str)
 {
 	if (str[0] == '>' && str[1] == '>')
@@ -73,6 +90,8 @@ enum e_tokentype	is_operator(char *str)
 	return (NONE);
 }
 
+/* Return the word ignoring space and consider quotes */
+
 char	*word(char *str, size_t *spc)
 {
 	size_t	len;
@@ -86,14 +105,7 @@ char	*word(char *str, size_t *spc)
 					&& is_operator(str + *spc) != WORD)
 				|| is_space(str[*spc])) && !quoted))
 	{
-		if (str[*spc] == '\'' && quoted == 0)
-			quoted = 1;
-		else if (str[*spc] == '\'' && quoted == 1)
-			quoted = 0;
-		else if (str[*spc] == '\"' && quoted == 0)
-			quoted = 2;
-		else if (str[*spc] == '\"' && quoted == 2)
-			quoted = 0;
+		is_quoted(str[*spc], &quoted);
 		len++;
 		(*spc)++;
 	}
@@ -101,6 +113,8 @@ char	*word(char *str, size_t *spc)
 		return (NULL);
 	return (ft_substr(str, *spc - len, len));
 }
+
+/* Check if the word is well quoted and not NULL */
 
 bool	check_word(char *str)
 {
@@ -113,14 +127,7 @@ bool	check_word(char *str)
 		return (false);
 	while (str[i])
 	{
-		if (str[i] == '\'' && quoted == 0)
-			quoted = 1;
-		else if (str[i] == '\'' && quoted == 1)
-			quoted = 0;
-		else if (str[i] == '\"' && quoted == 0)
-			quoted = 2;
-		else if (str[i] == '\"' && quoted == 2)
-			quoted = 0;
+		is_quoted(str[i], &quoted);
 		i++;
 	}
 	return (quoted == 0);
@@ -148,10 +155,14 @@ bool	check_pipe_next(t_token *lst)
 	return (false);
 }
 
+/* Check if there is any WORD token before and after the PIPE token */
+
 bool	check_pipe(t_token *lst)
 {
 	return (check_pipe_prev(lst) && check_pipe_next(lst));
 }
+
+/* Check all tokens */
 
 int	check_token(t_token *lst)
 {
@@ -203,7 +214,10 @@ void	print_error(int code)
 		printf("Malloc error\n");
 }
 
-void	lexer(char *str)
+/* The lexer seperate the command line in multiple tokens with type and content 
+and create a linked list with all the tokens in the good order */
+
+t_token	*lexer(char *str)
 {
 	size_t				j;
 	t_token				*lst;
@@ -237,4 +251,5 @@ void	lexer(char *str)
 	print_token(lst);
 	j = check_token(lst);
 	print_error(j);
+	return (lst);
 }

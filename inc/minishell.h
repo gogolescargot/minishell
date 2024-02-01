@@ -40,6 +40,11 @@ typedef struct s_token
 	struct s_token		*prev;
 }	t_token;
 
-void	lexer(char *str);
+t_token	*lexer(char *str);
+bool	is_space(char c);
+bool	is_quote(char c);
+void	is_quoted(char c, int *quoted);
+
+t_token	*expander(t_token *lst);
 
 #endif

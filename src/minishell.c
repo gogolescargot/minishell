@@ -15,6 +15,7 @@
 int	main(void)
 {
 	char	*line;
+	t_token	*lst;
 
 	while (1)
 	{
@@ -24,7 +25,8 @@ int	main(void)
 		else
 		{
 			add_history(line);
-			lexer(line);
+			lst = lexer(line);
+			expander(lst);
 			free(line);
 		}
 	}
