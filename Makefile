@@ -79,10 +79,12 @@ $(OBJS_DIR)%.o: $(SRCS_DIR)%.c $(INCL) Makefile
 	$(CC) $(CC_FLAGS) -c $< -o $@
 
 clean:
+	@ $(MAKE) --no-print-directory -C $(LIBFT_DIR) clean
 	@ echo "\n${BIRed}Project binary deletion...${NC}"
 	rm -rf $(OBJS_DIR)
 
 fclean:
+	@ $(MAKE) --no-print-directory -C $(LIBFT_DIR) fclean
 	@ echo "\n${BIRed}Project deletion...${NC}"
 	rm -rf $(OBJS_DIR)
 	rm -f $(NAME) $(NAME_B)

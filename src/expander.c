@@ -12,17 +12,17 @@
 
 #include "../inc/minishell.h"
 
-// char	*remove_quotes(char *str)
-// {
+size_t	getenv_skip(char *str)
+{
+	size_t	i;
 
-// }
+	i = 0;
+	while (str[i] && !is_space(str[i]) && !is_quote(str[i]) && str[i] != '$')
+		i++;
+	return (i);
+}
 
-// char	*expand_dollar(char *str)
-// {
-
-// }
-
-int	get_env_lengh(char *str)
+size_t	getenv_len(char *str)
 {
 	char	*env;
 
@@ -32,17 +32,17 @@ int	get_env_lengh(char *str)
 	return (ft_strlen(env));
 }
 
-char	*get_env_name(char *str)
+char	*getenv_name(char *str)
 {
 	size_t	i;
 
 	i = 0;
-	while (str[i] && !is_space(str[i]) && !is_quote(str[i]))
+	while (str[i] && !is_space(str[i]) && !is_quote(str[i]) && str[i] != '$')
 		i++;
 	return (ft_substr(str, 0, i));
 }
 
-int	get_len_content(char *str)
+size_t	content_len(char *str)
 {
 	size_t	i;
 	size_t	len;
@@ -50,46 +50,66 @@ int	get_len_content(char *str)
 
 	i = 0;
 	len = 0;
+	quoted = 0;
 	while (str[i])
 	{
 		is_quoted(str[i], &quoted);
-		if ((str[i] == '\'' && (quoted == 2 || quoted == 0)) || (str[i] == '\"' && (quoted == 1 || quoted == 0)))
+		if (str[i] == '$' && quoted < 2)
 		{
+			len += getenv_len(getenv_name(str + i + 1));
+			i += getenv_skip(str + i + 1) + 1;
+		}
+		else if ((str[i] == '\'' && (quoted == 2 || quoted == 0))
+			|| (str[i] == '\"' && (quoted == 1 || quoted == 0)))
 			i++;
-			continue;
-		}
-		if (quoted < 2 && str[i] == '$')
+		else
 		{
-			len += get_env_lengh(get_env_name(str + i + 1));
-			while (str[i] && !is_space(str[i]) && !is_quote(str[i]))
-				i++;
-			continue;
+			len++;
+			i++;
 		}
-		len++;
-		i++;
 	}
 	return (len);
 }
 
 char	*handle_content(char *str)
 {
-	// size_t	i;
+	size_t	i;
+	size_t	j;
 	size_t	len;
-	// int		quoted;
+	char	*new_content;
+	int		quoted;
 
-	// i = 0;
-	// quoted = 0;
-	len = get_len_content(str);
-	printf("%zu\n", len);
-	// while (str[i])
-	// {
-	// 	if (quoted < 2 && str[i] == '$')
-	// 	{
-	// 		get_env_name(str + i + 1);
-	// 	}
-	// 	i++;
-	// }
-	return ("str");
+	i = 0;
+	j = 0;
+	quoted = 0;
+	len = content_len(str);
+	new_content = ft_calloc(len + 1, sizeof(char));
+	if (!new_content)
+		return (NULL);
+	while (str[i])
+	{
+		is_quoted(str[i], &quoted);
+		if (str[i] == '$' && quoted < 2)
+		{
+			if (getenv(getenv_name(str + i + 1)))
+			{
+				ft_strlcat(new_content,
+					getenv(getenv_name(str + i + 1)), len + 1);
+				j += ft_strlen(getenv(getenv_name(str + i + 1)));
+			}
+			i += getenv_skip(str + i + 1) + 1;
+		}
+		else if ((str[i] == '\'' && (quoted == 2 || quoted == 0))
+			|| (str[i] == '\"' && (quoted == 1 || quoted == 0)))
+			i++;
+		else
+		{
+			new_content[j] = str[i];
+			i++;
+			j++;
+		}
+	}
+	return (new_content);
 }
 
 t_token	*expander(t_token *lst)
@@ -98,7 +118,7 @@ t_token	*expander(t_token *lst)
 	{
 		if (lst->content != NULL)
 		{
-			handle_content(lst->content);
+			printf("%s\n", handle_content(lst->content));
 		}
 		lst = lst->next;
 	}
