@@ -42,6 +42,8 @@ char	*getenv_name(char *str)
 	return (ft_substr(str, 0, i));
 }
 
+/* Calculate the size of the new content */
+
 size_t	content_len(char *str)
 {
 	size_t	i;
@@ -70,6 +72,8 @@ size_t	content_len(char *str)
 	}
 	return (len);
 }
+
+/* Rewrite it with quote interpretation and environment variables */
 
 char	*handle_content(char *str)
 {
@@ -111,6 +115,8 @@ char	*handle_content(char *str)
 	}
 	return (new_content);
 }
+
+/* Browse all the node with content and extend it */
 
 t_token	*expander(t_token *lst)
 {
