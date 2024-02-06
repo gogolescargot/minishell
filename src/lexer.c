@@ -207,7 +207,7 @@ void	print_error(int code)
 	if (code == 1)
 		printf("Missing Pipe Argument or quotes\n");
 	else if (code == 2)
-		printf("Missing quote\n");
+		printf("Missing argument or quote\n");
 	else if (code == 3)
 		printf("Token error\n");
 	else if (code == -1)
@@ -215,41 +215,42 @@ void	print_error(int code)
 }
 
 /* The lexer seperate the command line in multiple tokens with type and content 
-and create a linked list with all the tokens in the good order */
+   and create a linked list with all the tokens in the good order */
+
+void	lexer_utils(t_token *lst, char *str, enum e_tokentype type, size_t *i)
+{
+	(*i)++;
+	if (type == PIPE)
+		addback_token(&lst, type, NULL);
+	else
+		addback_token(&lst, type, word(str, i));
+}
 
 t_token	*lexer(char *str)
 {
-	size_t				j;
+	size_t				i;
 	t_token				*lst;
 	enum e_tokentype	type;
 
-	j = 0;
+	i = 0;
 	lst = NULL;
-	while (str[j])
+	while (str[i])
 	{
-		type = is_operator(str + j);
+		type = is_operator(str + i);
 		if (type == O_FILE_APPEND || type == HEREDOC)
 		{
-			j += 2;
-			addback_token(&lst, type, word(str, &j));
+			i += 2;
+			addback_token(&lst, type, word(str, &i));
 		}
 		else if (type == WORD)
-		{
-			addback_token(&lst, WORD, word(str, &j));
-		}
+			addback_token(&lst, WORD, word(str, &i));
 		else if (type != NONE)
-		{
-			j += 1;
-			if (type == PIPE)
-				addback_token(&lst, type, NULL);
-			else
-				addback_token(&lst, type, word(str, &j));
-		}
+			lexer_utils(lst, str, type, &i);
 		else
-			j++;
+			i++;
 	}
+	if (check_token(lst) != 0)
+		print_error(check_token(lst));
 	print_token(lst);
-	j = check_token(lst);
-	print_error(j);
 	return (lst);
 }

@@ -27,6 +27,12 @@ int	main(void)
 			add_history(line);
 			lst = lexer(line);
 			expander(lst);
+			while (lst)
+			{
+				if (lst->content)
+					printf("%s\n", lst->content);
+				lst = lst->next;
+			}
 			free(line);
 		}
 	}

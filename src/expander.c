@@ -22,16 +22,6 @@ size_t	getenv_skip(char *str)
 	return (i);
 }
 
-size_t	getenv_len(char *str)
-{
-	char	*env;
-
-	env = getenv(str);
-	if (!env)
-		return (0);
-	return (ft_strlen(env));
-}
-
 char	*getenv_name(char *str)
 {
 	size_t	i;
@@ -40,6 +30,17 @@ char	*getenv_name(char *str)
 	while (str[i] && !is_space(str[i]) && !is_quote(str[i]) && str[i] != '$')
 		i++;
 	return (ft_substr(str, 0, i));
+}
+
+char	*get_env(char *str)
+{
+	return (getenv(getenv_name(str)));
+}
+
+bool	is_interpreted_quote(char c, int quoted)
+{
+	return ((c == '\'' && (quoted == 2 || quoted == 0))
+		|| (c == '\"' && (quoted == 1 || quoted == 0)));
 }
 
 /* Calculate the size of the new content */
@@ -58,11 +59,10 @@ size_t	content_len(char *str)
 		is_quoted(str[i], &quoted);
 		if (str[i] == '$' && quoted < 2)
 		{
-			len += getenv_len(getenv_name(str + i + 1));
+			len += ft_strlen(get_env(str + i + 1));
 			i += getenv_skip(str + i + 1) + 1;
 		}
-		else if ((str[i] == '\'' && (quoted == 2 || quoted == 0))
-			|| (str[i] == '\"' && (quoted == 1 || quoted == 0)))
+		else if (is_interpreted_quote(str[i], quoted))
 			i++;
 		else
 		{
@@ -73,45 +73,51 @@ size_t	content_len(char *str)
 	return (len);
 }
 
-/* Rewrite it with quote interpretation and environment variables */
+void	update_content(char *str, char *new_content, size_t *i, size_t *j)
+{
+	new_content[*j] = str[*i];
+	(*i)++;
+	(*j)++;
+}
+
+/* Concatenate the environment variable to the new content
+   and skip the $VAR */
+
+void	update_content_env(char *str, char *new_content, size_t *i, size_t *j)
+{
+	if (get_env(str + *i + 1))
+	{
+		ft_strlcat(new_content, get_env(str + *i + 1), content_len(str) + 1);
+		*j += ft_strlen(get_env(str + *i + 1));
+	}
+	*i += getenv_skip(str + *i + 1) + 1;
+}
+
+/* Rewrite content with quote interpretation
+   and environment variables expanded */
 
 char	*handle_content(char *str)
 {
 	size_t	i;
 	size_t	j;
-	size_t	len;
 	char	*new_content;
 	int		quoted;
 
 	i = 0;
 	j = 0;
 	quoted = 0;
-	len = content_len(str);
-	new_content = ft_calloc(len + 1, sizeof(char));
+	new_content = ft_calloc(content_len(str) + 1, sizeof(char));
 	if (!new_content)
 		return (NULL);
 	while (str[i])
 	{
 		is_quoted(str[i], &quoted);
 		if (str[i] == '$' && quoted < 2)
-		{
-			if (getenv(getenv_name(str + i + 1)))
-			{
-				ft_strlcat(new_content,
-					getenv(getenv_name(str + i + 1)), len + 1);
-				j += ft_strlen(getenv(getenv_name(str + i + 1)));
-			}
-			i += getenv_skip(str + i + 1) + 1;
-		}
-		else if ((str[i] == '\'' && (quoted == 2 || quoted == 0))
-			|| (str[i] == '\"' && (quoted == 1 || quoted == 0)))
+			update_content_env(str, new_content, &i, &j);
+		else if (is_interpreted_quote(str[i], quoted))
 			i++;
 		else
-		{
-			new_content[j] = str[i];
-			i++;
-			j++;
-		}
+			update_content(str, new_content, &i, &j);
 	}
 	return (new_content);
 }
@@ -120,13 +126,19 @@ char	*handle_content(char *str)
 
 t_token	*expander(t_token *lst)
 {
-	while (lst)
+	char	*temp;
+	t_token	*current;
+
+	current = lst;
+	while (current)
 	{
-		if (lst->content != NULL)
+		if (current->content != NULL)
 		{
-			printf("%s\n", handle_content(lst->content));
+			temp = current->content;
+			current->content = handle_content(current->content);
+			free(temp);
 		}
-		lst = lst->next;
+		current = current->next;
 	}
 	return (lst);
 }
