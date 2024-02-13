@@ -20,6 +20,8 @@
 # include <readline/history.h>
 # include "../libft/inc/libft.h"
 
+extern int	g_exit_code;
+
 enum e_tokentype
 {
 	NONE,

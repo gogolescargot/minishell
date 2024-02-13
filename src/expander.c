@@ -34,6 +34,8 @@ char	*getenv_name(char *str)
 
 char	*get_env(char *str)
 {
+	if (!ft_strncmp(getenv_name(str), "?", 2))
+		return (ft_itoa(g_exit_code));
 	return (getenv(getenv_name(str)));
 }
 

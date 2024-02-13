@@ -24,29 +24,17 @@ INCL_DIR	=	inc/
 
 NAME	=	minishell
 
-NAME_B	=	
-
 LIBFT	=	$(LIBFT_DIR)libft.a
 
 FILE_C	=	minishell lexer expander
 
 FILE_H	=	minishell
 
-FILE_BC	=
-
-FILE_BH	=
-
 SRCS	=	$(addsuffix .c, $(addprefix $(SRCS_DIR), $(FILE_C)))
-
-SRCS_B	=	$(addsuffix .c, $(addprefix $(SRCS_DIR), $(FILE_BC)))
 
 OBJS	=	$(addsuffix .o, $(addprefix $(OBJS_DIR), $(FILE_C)))
 
-OBJS_B	=	$(addsuffix .o, $(addprefix $(OBJS_DIR), $(FILE_BC)))
-
 INCL	=	$(addsuffix .h, $(addprefix $(INCL_DIR), $(FILE_H)))
-
-INCL_B	=	$(addsuffix .h, $(addprefix $(INCL_DIR), $(FILE_BH)))
 
 # COMMANDS =====================================================================
 
