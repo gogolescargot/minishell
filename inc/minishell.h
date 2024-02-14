@@ -52,4 +52,6 @@ void	signal_handler(int code);
 
 t_token	*expander(t_token *lst);
 
+void	echo(char **cmd);
+
 #endif

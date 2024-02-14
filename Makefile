@@ -26,7 +26,7 @@ NAME	=	minishell
 
 LIBFT	=	$(LIBFT_DIR)libft.a
 
-FILE_C	=	minishell lexer expander signal
+FILE_C	=	minishell lexer expander signal builtin
 
 FILE_H	=	minishell
 
