@@ -1,43 +1,29 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   minishell.c                                        :+:      :+:    :+:   */
+/*   signal.c                                           :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: ggalon <ggalon@student.42lyon.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2024/01/27 17:16:44 by ggalon            #+#    #+#             */
-/*   Updated: 2024/01/27 17:16:44 by ggalon           ###   ########.fr       */
+/*   Created: 2024/02/14 01:03:36 by ggalon            #+#    #+#             */
+/*   Updated: 2024/02/14 01:03:36 by ggalon           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../inc/minishell.h"
 
-int	g_exit_code = 0;
-
-int	main(void)
+void	signal_handler(int code)
 {
-	char	*line;
-	t_token	*lst;
-
-	signal(SIGINT, signal_handler);
-	signal(SIGQUIT, SIG_IGN);
-	while (1)
+	if (code == 0)
 	{
-		line = readline("minishell > ");
-		if (!line)
-			signal_handler(0);
-		else
-		{
-			add_history(line);
-			lst = lexer(line);
-			expander(lst);
-			while (lst)
-			{
-				if (lst->content)
-					printf("%s\n", lst->content);
-				lst = lst->next;
-			}
-			free(line);
-		}
+		printf("exit\n");
+		exit(0);
+	}
+	else if (code == 2)
+	{
+		printf("\n");
+		rl_on_new_line();
+		rl_replace_line("", 0);
+		rl_redisplay();
 	}
 }

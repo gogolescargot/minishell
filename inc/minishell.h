@@ -16,6 +16,7 @@
 # include <stdio.h>
 # include <stdlib.h>
 # include <stdbool.h>
+# include <signal.h>
 # include <readline/readline.h>
 # include <readline/history.h>
 # include "../libft/inc/libft.h"
@@ -46,6 +47,8 @@ t_token	*lexer(char *str);
 bool	is_space(char c);
 bool	is_quote(char c);
 void	is_quoted(char c, int *quoted);
+
+void	signal_handler(int code);
 
 t_token	*expander(t_token *lst);
 
