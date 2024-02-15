@@ -14,11 +14,14 @@
 
 int	g_exit_code = 0;
 
-int	main(void)
+int	main(int argc, char **argv, char **envp)
 {
 	char	*line;
 	t_token	*lst;
 
+	(void)argc;
+	(void)argv;
+	(void)envp;
 	signal(SIGINT, signal_handler);
 	signal(SIGQUIT, SIG_IGN);
 	while (1)
