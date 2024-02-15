@@ -17,6 +17,8 @@
 # include <stdlib.h>
 # include <stdbool.h>
 # include <signal.h>
+# include <limits.h>
+# include <sys/stat.h>
 # include <readline/readline.h>
 # include <readline/history.h>
 # include "../libft/inc/libft.h"
@@ -52,9 +54,10 @@ void	signal_handler(int code);
 
 t_token	*expander(t_token *lst);
 
-void	echo(char **cmd);
-void	env(char **envp);
-void	pwd(char **envp);
-void	ft_exit(char **cmd);
+int		ft_echo(char **cmd);
+int		ft_env(char **envp);
+int		ft_pwd(void);
+int		ft_exit(char **cmd);
+int		ft_cd(char **cmd, char **envp);
 
 #endif
