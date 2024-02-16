@@ -12,6 +12,13 @@
 
 #include "../inc/minishell.h"
 
+/*
+ * Increment an index to skip the environment variable
+ *
+ * @param str A pointer to the beginning of the environment variable name
+ * @return A number of characters to skip
+ */
+
 size_t	getenv_skip(char *str)
 {
 	size_t	i;
@@ -21,6 +28,13 @@ size_t	getenv_skip(char *str)
 		i++;
 	return (i);
 }
+
+/*
+ * Get a key of an environment variable name without dollar
+ *
+ * @param str A pointer to the beginning of the environment variable name
+ * @return A pointer to a new environment variable name
+ */
 
 char	*getenv_name(char *str)
 {
@@ -32,6 +46,13 @@ char	*getenv_name(char *str)
 	return (ft_substr(str, 0, i));
 }
 
+/*
+ * Get an environment variable value associated with a name
+ *
+ * @param str A environment variable name
+ * @return A pointer to environment variable value associated with the name
+ */
+
 char	*get_env(char *str)
 {
 	if (!ft_strncmp(getenv_name(str), "?", 2))
@@ -39,13 +60,26 @@ char	*get_env(char *str)
 	return (getenv(getenv_name(str)));
 }
 
+/*
+ * Check if we are between quotes
+ *
+ * @param c A character to check
+ * @param quoted A current state of quotes
+ * @return A new state of quotes
+ */
+
 bool	is_interpreted_quote(char c, int quoted)
 {
 	return ((c == '\'' && (quoted == 2 || quoted == 0))
 		|| (c == '\"' && (quoted == 1 || quoted == 0)));
 }
 
-/* Calculate the size of the new content */
+/*
+ * Calculate the size of the new content
+ *
+ * @param str A string to handle
+ * @return A calculated new lengh
+ */
 
 size_t	content_len(char *str)
 {
@@ -75,6 +109,17 @@ size_t	content_len(char *str)
 	return (len);
 }
 
+/*
+ * Copy a caracter from the original string to the updated string
+ *
+ * @param str A string to handle
+ * @param new_content A buffer for the new updated string
+ * @param i A pointer to a size_t containing
+ * the current index of the environment variable in the original string
+ * @param j A pointer to a size_t containing
+ * the current index of the environment variable in the updated string
+ */
+
 void	update_content(char *str, char *new_content, size_t *i, size_t *j)
 {
 	new_content[*j] = str[*i];
@@ -82,8 +127,17 @@ void	update_content(char *str, char *new_content, size_t *i, size_t *j)
 	(*j)++;
 }
 
-/* Concatenate the environment variable to the new content
-   and skip the $VAR */
+/*
+ * Concatenate the environment variable to the new content
+ * and update i and j indexes
+ *
+ * @param str A string to handle
+ * @param new_content A buffer for the new updated string
+ * @param i A pointer to a size_t containing
+ * the current index of the environment variable in the original string
+ * @param j A pointer to a size_t containing
+ * the current index of the environment variable in the updated string
+ */
 
 void	update_content_env(char *str, char *new_content, size_t *i, size_t *j)
 {
@@ -95,8 +149,13 @@ void	update_content_env(char *str, char *new_content, size_t *i, size_t *j)
 	*i += getenv_skip(str + *i + 1) + 1;
 }
 
-/* Rewrite content with quote interpretation
-   and environment variables expanded */
+/*
+ * Handle the content with quote interpretation
+ * and environment variables expanded
+ *
+ * @param str A string to update
+ * @return A pointer to the new updated string
+ */
 
 char	*handle_content(char *str)
 {
@@ -124,7 +183,12 @@ char	*handle_content(char *str)
 	return (new_content);
 }
 
-/* Browse all the node with content and extend it */
+/*
+ * Browse all the node with content and extend it
+ *
+ * @param lst A linked list that contain all the tokens to expand 
+ * @return A pointer to the beginning of the LST linked list
+ */
 
 t_token	*expander(t_token *lst)
 {

@@ -12,6 +12,13 @@
 
 #include "../inc/minishell.h"
 
+/*
+ * Check if the command is a builtin function
+ *
+ * @param str A command string
+ * @return True if the string is a builtin function, otherwise False
+ */
+
 bool	is_builtin(char *str)
 {
 	if (!ft_strncmp(str, "echo", 5))
@@ -30,6 +37,13 @@ bool	is_builtin(char *str)
 		return (true);
 	return (false);
 }
+
+/*
+ * Echo the STRING(s) to standard output
+ *
+ * @param cmd An array of strings that contains all of the environment variables
+ * @return 0 on success, 1 in case of error
+ */
 
 int	ft_echo(char **cmd)
 {
@@ -58,6 +72,13 @@ int	ft_echo(char **cmd)
 	return (0);
 }
 
+/*
+ * Display all environment variables
+ *
+ * @param envp An array of strings that contains all of the environment variables
+ * @return 0 on success, 1 in case of error
+ */
+
 int	ft_env(char **envp)
 {
 	size_t	i;
@@ -73,6 +94,12 @@ int	ft_env(char **envp)
 	}
 	return (0);
 }
+
+/*
+ * Print working directory
+ *
+ * @return 0 on success, 1 in case of error
+ */
 
 int	ft_pwd(void)
 {
@@ -100,6 +127,15 @@ void	exit_error(char *str)
 	exit(2);
 }
 
+/*
+ * Convert the string error code, check the exit function argument and
+ * update the error code pointer R
+ *
+ * @param nptr An exit code number in strig format
+ * @param r A pointer to the exit code number
+ * @return True if the argument is well right, otherwise return false
+ */
+
 bool	check_exit(char *nptr, size_t *r)
 {
 	int		i;
@@ -126,6 +162,13 @@ bool	check_exit(char *nptr, size_t *r)
 	return (true);
 }
 
+/*
+ * Exit the program with the right error code
+ *
+ * @param cmd An array of strings containing the command itself and the arguments
+ * @return 0 on success, 1 in case of error
+ */
+
 int	ft_exit(char **cmd)
 {
 	size_t	exit_code;
@@ -147,6 +190,15 @@ int	ft_exit(char **cmd)
 	return (1);
 }
 
+/*
+ * Retrieves the value assigned to a key in an environment array
+ *
+ * @param envp An array of strings that contains all of the environment variables
+ * @param key A key to find
+ * @return A pointer to the value associated with the key if it is found,
+ * otherwise NULL
+ */
+
 char	*get_envp(char **envp, char *key)
 {
 	size_t		i;
@@ -162,6 +214,15 @@ char	*get_envp(char **envp, char *key)
 	}
 	return (NULL);
 }
+
+/*
+ * Update the value assigned to a key in an environment array
+ *
+ * @param envp An array of strings that contains all of the environment variables
+ * @param key A key to find
+ * @param value A new value to set for the key
+ * @return 0 if the key is successfully updated, otherwise 1
+ */
 
 int	update_envp(char **envp, char *key, char *value)
 {
@@ -187,6 +248,13 @@ int	update_envp(char **envp, char *key, char *value)
 	return (0);
 }
 
+/*
+ * Display the cd error message
+ *
+ * @param path A path to the file
+ * @param str An error message
+ */
+
 void	cd_error(char *path, char *str)
 {
 	ft_putstr_fd("cd: ", 2);
@@ -198,6 +266,13 @@ void	cd_error(char *path, char *str)
 	ft_putstr_fd(path, 2);
 	ft_putstr_fd(str, 2);
 }
+
+/*
+ * Checks if a given path corresponds to a directory
+ *
+ * @param path A path to check
+ * @return True if the given path is a directory, otherwise False
+ */
 
 bool	check_cd_folder(char *path)
 {
@@ -216,6 +291,13 @@ bool	check_cd_folder(char *path)
 	return (true);
 }
 
+/*
+ * Checks if a given path exists and can be accessed
+ *
+ * @param path A path to check
+ * @return True if the given path exists and can be accessed, otherwise False
+ */
+
 bool	check_cd_access(char *path)
 {
 	if (access(path, F_OK | X_OK) == 0)
@@ -226,6 +308,13 @@ bool	check_cd_access(char *path)
 		cd_error(path, ": Permission denied\n");
 	return (false);
 }
+
+/*
+ * Checks if the command parameters and can be successfully reached.
+
+ * @param cmd An array of strings containing the command itself and the arguments
+ * @return True if the given path can be successfully reached, otherwise False
+ */
 
 bool	check_cd(char **cmd)
 {
@@ -239,6 +328,14 @@ bool	check_cd(char **cmd)
 		return (false);
 	return (true);
 }
+
+/*
+ * Change directory
+ *
+ * @param cmd An array of strings containing the command itself and the arguments
+ * @param envp An array of strings containing all environment variables
+ * @return 0 on success, 1 in case of error
+ */
 
 int	ft_cd(char **cmd, char **envp)
 {

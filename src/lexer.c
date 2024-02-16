@@ -61,6 +61,13 @@ bool	is_quote(char c)
 	return (ft_strchr("\"\'", c));
 }
 
+/*
+ * Check a quote interpretation and update a quotes state
+ *
+ * @param c A caracter to check
+ * @param quoted A current state of quotes
+ */
+
 void	is_quoted(char c, int *quoted)
 {
 	if (c == '\"' && *quoted == 0)
@@ -72,6 +79,14 @@ void	is_quoted(char c, int *quoted)
 	else if (c == '\'' && *quoted == 2)
 		*quoted = 0;
 }
+
+/*
+ * Check if its an operator
+ *
+ * @param str A string to check
+ * @return An enumeration token type of the operator,
+ * otherwise enumeration token type NONE
+ */
 
 enum e_tokentype	is_operator(char *str)
 {
@@ -90,7 +105,12 @@ enum e_tokentype	is_operator(char *str)
 	return (NONE);
 }
 
-/* Return the word ignoring space and consider quotes */
+/*
+ * Truncate a string to get a word ignoring space and consider quotes
+ *
+ * @param str A string to truncate
+ * @return A pointer to the new word, otherwise NULL
+ */
 
 char	*word(char *str, size_t *spc)
 {
@@ -114,7 +134,12 @@ char	*word(char *str, size_t *spc)
 	return (ft_substr(str, *spc - len, len));
 }
 
-/* Check if the word is well quoted and not NULL */
+/*
+ * Check if the word is well quoted and not NULL
+ *
+ * @param str A string to check
+ * @return True if the synthax is correct, otherwise False
+ */
 
 bool	check_word(char *str)
 {
@@ -155,14 +180,24 @@ bool	check_pipe_next(t_token *lst)
 	return (false);
 }
 
-/* Check if there is any WORD token before and after the PIPE token */
+/*
+ * Check if there is any WORD token before and after the PIPE token
+ *
+ * @param lst A linked list that contain all the tokens to check
+ * @return True if the synthax is correct, otherwise False
+ */
 
 bool	check_pipe(t_token *lst)
 {
 	return (check_pipe_prev(lst) && check_pipe_next(lst));
 }
 
-/* Check all tokens */
+/*
+ * Check all tokens synthax
+ *
+ * @param lst A linked list that contain all the tokens to check
+ * @return 0 if the synthax is correct, otherwise non-zero value
+ */
 
 int	check_token(t_token *lst)
 {
@@ -214,9 +249,6 @@ void	print_error(int code)
 		printf("Malloc error\n");
 }
 
-/* The lexer seperate the command line in multiple tokens with type and content 
-   and create a linked list with all the tokens in the good order */
-
 void	lexer_utils(t_token *lst, char *str, enum e_tokentype type, size_t *i)
 {
 	(*i)++;
@@ -225,6 +257,13 @@ void	lexer_utils(t_token *lst, char *str, enum e_tokentype type, size_t *i)
 	else
 		addback_token(&lst, type, word(str, i));
 }
+
+/*
+ * Lexical analyzer
+ *
+ * @param str A string to analyze
+ * @return A linked list of all the splited tokens in the string
+ */
 
 t_token	*lexer(char *str)
 {
