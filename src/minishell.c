@@ -14,14 +14,28 @@
 
 int	g_exit_code = 0;
 
+void	init_envp(t_list **envp_lst, char **envp)
+{
+	size_t	i;
+
+	i = 0;
+	while (envp[i])
+	{
+		ft_lstadd_back(envp_lst, ft_lstnew(ft_strdup(envp[i])));
+		i++;
+	}
+}
+
 int	main(int argc, char **argv, char **envp)
 {
 	char	*line;
 	t_token	*lst;
+	t_list	*envp_lst;
 
 	(void)argc;
 	(void)argv;
-	(void)envp;
+	envp_lst = NULL;
+	init_envp(&envp_lst, envp);
 	signal(SIGINT, signal_handler);
 	signal(SIGQUIT, SIG_IGN);
 	while (1)
@@ -33,7 +47,7 @@ int	main(int argc, char **argv, char **envp)
 		{
 			add_history(line);
 			lst = lexer(line);
-			expander(lst);
+			expander(lst, envp_lst);
 			while (lst)
 			{
 				if (lst->content)
@@ -43,4 +57,5 @@ int	main(int argc, char **argv, char **envp)
 			free(line);
 		}
 	}
+	ft_lstclear(&envp_lst, ft_free);
 }

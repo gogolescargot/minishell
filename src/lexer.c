@@ -249,15 +249,6 @@ void	print_error(int code)
 		printf("Malloc error\n");
 }
 
-void	lexer_utils(t_token *lst, char *str, enum e_tokentype type, size_t *i)
-{
-	(*i)++;
-	if (type == PIPE)
-		addback_token(&lst, type, NULL);
-	else
-		addback_token(&lst, type, word(str, i));
-}
-
 /*
  * Lexical analyzer
  *
@@ -277,16 +268,13 @@ t_token	*lexer(char *str)
 	{
 		type = is_operator(str + i);
 		if (type == O_FILE_APPEND || type == HEREDOC)
-		{
 			i += 2;
-			addback_token(&lst, type, word(str, &i));
-		}
-		else if (type == WORD)
-			addback_token(&lst, WORD, word(str, &i));
+		else if (type != WORD)
+			i += 1;
+		if (type == PIPE)
+			addback_token(&lst, type, NULL);
 		else if (type != NONE)
-			lexer_utils(lst, str, type, &i);
-		else
-			i++;
+			addback_token(&lst, type, word(str, &i));
 	}
 	if (check_token(lst) != 0)
 		print_error(check_token(lst));

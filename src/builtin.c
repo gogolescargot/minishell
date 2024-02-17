@@ -39,6 +39,23 @@ bool	is_builtin(char *str)
 }
 
 /*
+ * Compare two strings in an environment variable context
+ *
+ * @param s1 A first string to compare
+ * @param s1 A second string to compare
+ * @return True if the two strings are the same
+ * and terminated by equals, False otherwise
+ */
+
+bool	is_env(char *s1, char *s2)
+{
+	size_t	len;
+
+	len = ft_strlen(s2);
+	return (ft_strncmp(s1, s2, len) == 0 && s1[len] == '=');
+}
+
+/*
  * Echo the STRING(s) to standard output
  *
  * @param cmd An array of strings that contains all of the environment variables
@@ -75,22 +92,19 @@ int	ft_echo(char **cmd)
 /*
  * Display all environment variables
  *
- * @param envp An array of strings that contains all of the environment variables
+ * @param envp A linked list that contain the environement variables
  * @return 0 on success, 1 in case of error
  */
 
-int	ft_env(char **envp)
+int	ft_env(t_list *envp)
 {
-	size_t	i;
-
-	i = 0;
 	if (!envp)
 		return (1);
-	while (envp[i])
+	while (envp)
 	{
-		if (printf("%s\n", envp[i]) == -1)
+		if (printf("%s\n", (char *)envp->content) == -1)
 			return (1);
-		i++;
+		envp = envp->next;
 	}
 	return (0);
 }
@@ -114,6 +128,12 @@ int	ft_pwd(void)
 	return (1);
 }
 
+/*
+ * Display exit error message
+ *
+ * @param str An error message
+ */
+
 void	exit_error(char *str)
 {
 	ft_putstr_fd("exit: ", 2);
@@ -136,7 +156,7 @@ void	exit_error(char *str)
  * @return True if the argument is well right, otherwise return false
  */
 
-bool	check_exit(char *nptr, size_t *r)
+bool	exit_check(char *nptr, size_t *r)
 {
 	int		i;
 	int		m;
@@ -180,7 +200,7 @@ int	ft_exit(char **cmd)
 	if (!cmd[1])
 		exit(g_exit_code);
 	exit_code = 0;
-	check = check_exit(cmd[1], &exit_code);
+	check = exit_check(cmd[1], &exit_code);
 	if (!check)
 		exit_error(cmd[1]);
 	else if (check && cmd[2])
@@ -191,65 +211,40 @@ int	ft_exit(char **cmd)
 }
 
 /*
- * Retrieves the value assigned to a key in an environment array
- *
- * @param envp An array of strings that contains all of the environment variables
- * @param key A key to find
- * @return A pointer to the value associated with the key if it is found,
- * otherwise NULL
- */
-
-char	*get_envp(char **envp, char *key)
-{
-	size_t		i;
-	size_t		len;
-
-	i = 0;
-	len = ft_strlen(key);
-	while (envp && envp[i])
-	{
-		if (ft_strncmp(envp[i], key, len) == 0 && envp[i][len] == '=')
-			return (envp[i] + len + 1);
-		i++;
-	}
-	return (NULL);
-}
-
-/*
  * Update the value assigned to a key in an environment array
  *
- * @param envp An array of strings that contains all of the environment variables
+ * @param envp A linked list that contain the environement variables
  * @param key A key to find
  * @param value A new value to set for the key
  * @return 0 if the key is successfully updated, otherwise 1
  */
 
-int	update_envp(char **envp, char *key, char *value)
+void	update_env(t_list *envp, char *key, char *value)
 {
-	size_t		i;
 	size_t		len;
 	char		*str;
 
-	i = 0;
 	len = ft_strlen(key);
 	str = ft_calloc(len + ft_strlen(value) + 2, sizeof(char));
+	if (!str)
+		return ;
 	ft_strlcpy(str, key, len + 1);
 	str[len] = '=';
 	ft_strlcpy(str + len + 1, value, ft_strlen(value) + 1);
-	while (envp && envp[i])
+	while (envp)
 	{
-		if (ft_strncmp(envp[i], key, len) == 0 && envp[i][len] == '=')
+		if (is_env(envp->content, key))
 			break ;
-		i++;
+		envp = envp->next;
 	}
-	if (!envp[i])
-		return (1);
-	envp[i] = str;
-	return (0);
+	if (!envp)
+		return ;
+	free(envp->content);
+	envp->content = str;
 }
 
 /*
- * Display the cd error message
+ * Display a cd error message
  *
  * @param path A path to the file
  * @param str An error message
@@ -263,50 +258,7 @@ void	cd_error(char *path, char *str)
 		ft_putstr_fd(str, 2);
 		return ;
 	}
-	ft_putstr_fd(path, 2);
-	ft_putstr_fd(str, 2);
-}
-
-/*
- * Checks if a given path corresponds to a directory
- *
- * @param path A path to check
- * @return True if the given path is a directory, otherwise False
- */
-
-bool	check_cd_folder(char *path)
-{
-	struct stat	info;
-
-	if (stat(path, &info) == -1)
-	{
-		cd_error(path, ": Stat error\n");
-		return (false);
-	}
-	if (S_ISDIR(info.st_mode) == 0)
-	{
-		cd_error(path, ": Not a directory\n");
-		return (false);
-	}
-	return (true);
-}
-
-/*
- * Checks if a given path exists and can be accessed
- *
- * @param path A path to check
- * @return True if the given path exists and can be accessed, otherwise False
- */
-
-bool	check_cd_access(char *path)
-{
-	if (access(path, F_OK | X_OK) == 0)
-		return (true);
-	else if (access(path, F_OK) == -1)
-		cd_error(path, ": No such file or directory\n");
-	else if (access(path, X_OK) == -1)
-		cd_error(path, ": Permission denied\n");
-	return (false);
+	perror(path);
 }
 
 /*
@@ -316,16 +268,12 @@ bool	check_cd_access(char *path)
  * @return True if the given path can be successfully reached, otherwise False
  */
 
-bool	check_cd(char **cmd)
+bool	cd_check(char **cmd)
 {
 	if (!cmd)
 		return (false);
 	if (cmd[2])
 		return (cd_error(NULL, "Too many arguments\n"), false);
-	if (!cmd[1])
-		return (true);
-	if (!check_cd_access(cmd[1]) || !check_cd_folder(cmd[1]))
-		return (false);
 	return (true);
 }
 
@@ -333,21 +281,212 @@ bool	check_cd(char **cmd)
  * Change directory
  *
  * @param cmd An array of strings containing the command itself and the arguments
- * @param envp An array of strings containing all environment variables
+ * @param envp A linked list that contain the environement variables
  * @return 0 on success, 1 in case of error
  */
 
-int	ft_cd(char **cmd, char **envp)
+int	ft_cd(char **cmd, t_list *envp)
 {
 	char	path[4096];
+	char	*home;
 
-	if (!check_cd(cmd))
+	if (!cd_check(cmd))
 		return (1);
-	update_envp(envp, "OLDPWD", getcwd(path, 4096));
+	update_env(envp, "OLDPWD", getcwd(path, 4096));
 	if (!cmd[1])
-		chdir(get_envp(envp, "HOME"));
+	{
+		home = get_env("HOME", envp);
+		if (!home)
+			return (cd_error(NULL, "HOME not set\n"), 1);
+		chdir(home);
+		if (errno != 0)
+			return (cd_error(cmd[1], NULL), 1);
+	}
 	else
+	{
 		chdir(cmd[1]);
-	update_envp(envp, "PWD", getcwd(path, 4096));
+		if (errno != 0)
+			return (cd_error(cmd[1], NULL), 1);
+	}
+	update_env(envp, "PWD", getcwd(path, 4096));
+	return (0);
+}
+
+/*
+ * Display a export error message
+ *
+ * @param str An error message
+ */
+
+void	export_error(char *str)
+{
+	ft_putstr_fd("export: `", 2);
+	ft_putstr_fd(str, 2);
+	ft_putstr_fd("': Not a valid identifier\n", 2);
+}
+
+/*
+ * Display all exported variables
+ *
+ * @param envp A linked list that contain the environement variables
+ * @return 0 on success, 1 in case of error
+ */
+
+int	export_print(t_list *envp)
+{
+	while (envp)
+	{
+		if (printf("declare -x %s\n", (char *)envp->content) == -1)
+			return (1);
+		envp = envp->next;
+	}
+	return (0);
+}
+
+/*
+ * Check the synthax and if the environment variable name already exist
+ *
+ * @param cmd An array of strings containing the command itself and the arguments
+ * @param envp A linked list that contain the environement variables
+ * @param current A pointer on the target node
+ * @return 0 on success, 1 in case of error
+ */
+
+int	export_check(char *cmd, t_list *envp, t_list **current)
+{
+	size_t	i;
+
+	i = 0;
+	*current = envp;
+	while (cmd[i] && cmd[i] != '=')
+	{
+		if (is_space(cmd[i]) || is_operator(cmd + i) != WORD
+			|| is_quote(cmd[i]))
+			return (-1);
+		i++;
+	}
+	if (!cmd[i] || i == 0)
+		return (-1);
+	while (*current)
+	{
+		if (is_env((*current)->content, cmd))
+			return (1);
+		*current = (*current)->next;
+	}
+	return (2);
+}
+
+/*
+ * Export one or multiple environment variables
+ *
+ * @param cmd An array of strings containing the command itself and the arguments
+ * @param envp A linked list that contain the environement variables
+ * @return 0 on success, 1 in case of error
+ */
+
+int	ft_export(char **cmd, t_list *envp)
+{
+	int		check;
+	t_list	*target;
+	size_t	i;
+
+	i = 1;
+	if (!cmd)
+		return (1);
+	if (!cmd[i])
+		return (export_print(envp));
+	while (cmd[i])
+	{
+		target = NULL;
+		check = export_check(cmd[i], envp, &target);
+		if (check == -1)
+			return (export_error(cmd[i]), 1);
+		else if (check == 1)
+		{
+			free(target->content);
+			target->content = cmd[i];
+		}
+		else if (check == 2)
+			ft_lstadd_back(&envp, ft_lstnew(ft_strdup(cmd[i])));
+		i++;
+	}
+	return (0);
+}
+
+/*
+ * Pop one element from a linked list and reconnect all the pointer correctly
+
+ * @param envp A linked list that contain the environement variables
+ * @param current A pointer to the current linked list node
+ * @param current A pointer to the previous linked list node
+ */
+
+void	unset_pop(t_list *envp, t_list *current, t_list *prev)
+{
+	if (prev)
+	{
+		prev->next = current->next;
+		free(current->content);
+		free(current);
+		current = prev->next;
+	}
+	else
+	{
+		envp = current->next;
+		free(current->content);
+		free(current);
+		current = envp;
+	}
+}
+
+/*
+ * Utils function of unset
+ *
+ * @param envp A linked list that contain the environement variables
+ * @param current A pointer to the current linked list node
+ * @param current A pointer to the previous linked list node
+ */
+
+void	unset_utils(t_list *envp, t_list *current, t_list *prev, char *cmd)
+{
+	while (current)
+	{
+		if (is_env(current->content, cmd))
+		{
+			unset_pop(envp, current, prev);
+			break ;
+		}
+		else
+		{
+			prev = current;
+			current = current->next;
+		}
+	}
+}
+
+/*
+ * Unset one or multiple environment variables
+ *
+ * @param cmd An array of strings containing the command itself and the arguments
+ * @param envp A linked list that contain the environement variables
+ * @return 0 on success, 1 in case of error
+ */
+
+int	ft_unset(char **cmd, t_list *envp)
+{
+	t_list	*current;
+	t_list	*prev;
+	size_t	i;
+
+	i = 1;
+	if (!cmd)
+		return (1);
+	while (cmd[i])
+	{
+		prev = NULL;
+		current = envp;
+		unset_utils(envp, current, prev, cmd[i]);
+		i++;
+	}
 	return (0);
 }
