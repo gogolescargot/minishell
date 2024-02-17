@@ -24,29 +24,20 @@ INCL_DIR	=	inc/
 
 NAME	=	minishell
 
-NAME_B	=	
-
 LIBFT	=	$(LIBFT_DIR)libft.a
 
-FILE_C	=	minishell lexer expander
+FILE_C	=	minishell signal \
+			lexer/lexer lexer/token lexer/utils_1 lexer/utils_2 \
+			expander/expander expander/env expander/utils \
+			builtins/echo builtins/cd builtins/pwd builtins/export builtins/unset builtins/env builtins/exit builtins/utils \
 
 FILE_H	=	minishell
 
-FILE_BC	=
-
-FILE_BH	=
-
 SRCS	=	$(addsuffix .c, $(addprefix $(SRCS_DIR), $(FILE_C)))
-
-SRCS_B	=	$(addsuffix .c, $(addprefix $(SRCS_DIR), $(FILE_BC)))
 
 OBJS	=	$(addsuffix .o, $(addprefix $(OBJS_DIR), $(FILE_C)))
 
-OBJS_B	=	$(addsuffix .o, $(addprefix $(OBJS_DIR), $(FILE_BC)))
-
 INCL	=	$(addsuffix .h, $(addprefix $(INCL_DIR), $(FILE_H)))
-
-INCL_B	=	$(addsuffix .h, $(addprefix $(INCL_DIR), $(FILE_BH)))
 
 # COMMANDS =====================================================================
 
@@ -66,7 +57,7 @@ all:
 	@ echo "\n${BIBlue}Checking Norminette...${NC}"
 	@ $(NORM) | grep -q Error && $(NORM) | grep Error || echo "\n${BIGreen}Norminette OK !${NC}"
 	@ $(MAKE) --no-print-directory -C $(LIBFT_DIR)
-	@ mkdir -p $(OBJS_DIR)
+	@ mkdir -p $(OBJS_DIR) $(OBJS_DIR)/lexer $(OBJS_DIR)/expander $(OBJS_DIR)/builtins
 	@ echo "\n${BIBlue}Compilation of project source files...${NC}"
 	@ $(MAKE) --no-print-directory $(NAME)
 	@ echo "\n${BIGreen}Project Ready !${NC}\n"
