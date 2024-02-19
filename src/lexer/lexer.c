@@ -102,6 +102,6 @@ t_token	*lexer(char *str)
 	}
 	if (check_token(lst) != 0)
 		print_error(check_token(lst));
-	print_token(lst);
+	// print_token(lst);
 	return (lst);
 }

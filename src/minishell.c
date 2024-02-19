@@ -55,12 +55,13 @@ int	main(int argc, char **argv, char **envp)
 			add_history(line);
 			lst = lexer(line);
 			expander(lst, envp_lst);
-			while (lst)
-			{
-				if (lst->content)
-					printf("%s\n", lst->content);
-				lst = lst->next;
-			}
+			execuction(lst, envp_lst);
+			// while (lst)
+			// {
+			// 	if (lst->content)
+			// 		printf("%s\n", lst->content);
+			// 	lst = lst->next;
+			// }
 			free(line);
 		}
 	}

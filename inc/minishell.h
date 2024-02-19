@@ -19,6 +19,7 @@
 # include <signal.h>
 # include <limits.h>
 # include <errno.h>
+# include <fcntl.h>
 # include <sys/stat.h>
 # include <readline/readline.h>
 # include <readline/history.h>
@@ -62,6 +63,7 @@ typedef struct s_data
 
 t_token				*lexer(char *str);
 t_token				*expander(t_token *lst, t_list *envp);
+void				execuction(t_token *tokens, t_list *envp);
 
 bool				is_space(char c);
 bool				is_quote(char c);
@@ -78,6 +80,7 @@ int					check_token(t_token *lst);
 void				addback_token(t_token **lst,
 						enum e_tokentype type, char *content);
 size_t				content_len(char *str, t_list *envp);
+
 
 int					ft_echo(char **cmd);
 int					ft_env(t_list *envp);
