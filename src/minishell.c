@@ -26,6 +26,7 @@ t_list	*init_envp(char **envp)
 	t_list	*envp_lst;
 
 	i = 0;
+	envp_lst = NULL;
 	while (envp[i])
 	{
 		ft_lstadd_back(&envp_lst, ft_lstnew(ft_strdup(envp[i])));
