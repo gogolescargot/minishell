@@ -70,11 +70,20 @@ void	print_command(char **cmd)
 	}
 }
 
-char	*env_list_to_string(t_list *envp_lst)
+char	**env_lst_to_str(t_list *envp_lst)
 {
 	char	**envp;
+	size_t	i;
 
+	i = 0;
 	envp = ft_calloc(ft_lstsize(envp_lst) + 1, sizeof(char *));
+	while (envp_lst)
+	{
+		envp[i] = envp_lst->content;
+		envp_lst = envp_lst->next;
+		i++;
+	}
+	return (envp);
 }
 
 void	handle_error(char *str, int error_code)
@@ -132,10 +141,14 @@ void	exec_fullpath(char **args, char **envp)
 	exit(126);
 }
 
-void	exec(char **cmd, t_token *envp)
+void	exec(char **cmd, t_list *envp_lst)
 {
-	if (!cmd || !cmd[0])
+	char **envp;
+
+	// printf("%s\n", cmd[0]);
+	if (!cmd[0])
 		(handle_error("''", -1), exit(127));
+	envp = env_lst_to_str(envp_lst);
 	if (cmd[0][0] == '/')
 		exec_fullpath(cmd, envp);
 	// if (check_path_cmd(cmd[0], envp) == 1)
@@ -146,7 +159,7 @@ void	exec(char **cmd, t_token *envp)
 	// execve(cmd[0], cmd, envp);
 	// handle_error("Exec", errno);
 	ft_arrayclear(cmd);
-	free(cmd);
+	// free(cmd);
 	exit(127);
 }
 
@@ -178,7 +191,7 @@ void	file_bonus(char *file, bool mode, int *fd, bool here_doc)
 	}
 }
 
-int	pipex_bonus(char **cmd, t_token *envp, int state)
+int	pipex_bonus(char **cmd, t_list *envp, int state)
 {
 	pid_t	pid;
 	int		fd[2];
@@ -207,21 +220,47 @@ int	pipex_bonus(char **cmd, t_token *envp, int state)
 	return (pid);
 }
 
-void	pipex(int nbr_cmd, char ***cmd, t_list *envp);
+void	pipex(size_t nbr_cmd, char ***cmd, t_list *envp)
 {
 	size_t	i;
 
 	i = 0;
 	pipex_bonus(cmd[i], envp, -1);
-	while (i < nbr_cmd)
+	while (i < nbr_cmd - 1)
 	{
-		pipex_bonus(argv[i], envp, 0);
+		pipex_bonus(cmd[i], envp, 0);
 		i++;
 	}
-	pipex_bonus(argv[i], envp, 1);
+	pipex_bonus(cmd[i], envp, 1);
 	// 			, argv[argc - 1], state)
 	// return (wait_process(pipex_bonus(argv[argc - 2], envp
 	// 			, argv[argc - 1], state)));
+}
+
+void	exec_one(char **cmd, t_list *envp_lst)
+{
+	int		temp;
+	pid_t	pid;
+	char	**envp;
+
+	pid = fork();
+	if (pid < 0)
+		(handle_error("Fork", errno), exit(1));
+	if (pid == 0)
+	{
+		envp = env_lst_to_str(envp_lst);
+		execve(cmd[0], cmd, envp);
+		temp = errno;
+		if (check_folder(cmd[0]))
+			(handle_error(cmd[0], 21), ft_arrayclear(cmd), exit(127));
+		if (temp == 2)
+			(handle_error(cmd[0], -1), ft_arrayclear(cmd), exit(127));
+		else if (temp != 8)
+			handle_error(cmd[0], temp);
+		ft_arrayclear(cmd);
+		exit(126);
+	}
+	waitpid(pid, NULL, 0);
 }
 
 void	execuction(t_token *tokens, t_list *envp)
@@ -237,10 +276,11 @@ void	execuction(t_token *tokens, t_list *envp)
 	{
 		if (tokens->type == WORD)
 			fill_command(&tokens, &cmd[i]);
-		print_command(cmd[i]);
+		// print_command(cmd[i]);
 		if (tokens)
 			tokens = tokens->next;
 		i++;
 	}
-	pipex(nbr_cmd, cmd, envp);
+	exec_one(cmd[0], envp);
+	// pipex(nbr_cmd, cmd, envp);
 }
