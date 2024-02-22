@@ -96,21 +96,18 @@ char	*expand_content(char *str, t_list *envp)
  * @return A pointer to the beginning of the LST linked list
  */
 
-t_token	*expander(t_token *lst, t_list *envp)
+void	expander(t_token *lst, t_list *envp)
 {
 	char	*temp;
-	t_token	*current;
 
-	current = lst;
-	while (current)
+	while (lst)
 	{
-		if (current->content != NULL)
+		if (lst->content != NULL)
 		{
-			temp = current->content;
-			current->content = expand_content(current->content, envp);
+			temp = lst->content;
+			lst->content = expand_content(lst->content, envp);
 			free(temp);
 		}
-		current = current->next;
+		lst = lst->next;
 	}
-	return (lst);
 }

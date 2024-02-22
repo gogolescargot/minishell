@@ -12,7 +12,18 @@
 
 #include "../../inc/minishell.h"
 
-size_t	get_command_number(t_token *tokens)
+bool	is_absolute_path(char *cmd)
+{
+	if (cmd[0] == '/')
+		return (true);
+	else if (cmd[0] == '.' && cmd[1] == '/')
+		return (true);
+	else if (cmd[0] == '.' && cmd[1] == '.' && cmd[2] == '/')
+		return (true);
+	return (false);
+}
+
+size_t	get_cmd_nbr(t_token *tokens)
 {
 	size_t	i;
 
@@ -26,7 +37,7 @@ size_t	get_command_number(t_token *tokens)
 	return (i);
 }
 
-size_t	get_command_size(t_token *tokens)
+size_t	get_cmd_size(t_token *tokens)
 {
 	size_t	i;
 
@@ -40,16 +51,47 @@ size_t	get_command_size(t_token *tokens)
 	return (i);
 }
 
-void	fill_command(t_token **tokens, char ***cmd)
+char	*get_cmd_path(char *cmd, t_list *envp_lst)
+{
+	char	**all_path;
+	char	*path;
+	char	*exec;
+	int		i;
+
+	if (is_absolute_path(cmd))
+		return (ft_strdup(cmd));
+	i = -1;
+	all_path = ft_split(get_env("PATH", envp_lst), ':');
+	while (all_path && all_path[++i])
+	{
+		path = ft_strjoin(all_path[i], "/");
+		exec = ft_strjoin(path, cmd);
+		free(path);
+		if (access(exec, (F_OK | X_OK)) == 0)
+		{
+			ft_arrayclear(all_path);
+			return (exec);
+		}
+		free(exec);
+	}
+	ft_arrayclear(all_path);
+	return (ft_strdup(cmd));
+}
+
+void	fill_command(t_token **tokens, char ***cmd, t_list *envp_lst)
 {
 	size_t	i;
 
 	i = 0;
-	*cmd = ft_calloc(get_command_size(*tokens) + 1, sizeof(char *));
+	*cmd = ft_calloc(get_cmd_size(*tokens) + 1, sizeof(char *));
 	while (*tokens && (*tokens)->type != PIPE)
 	{
-		if ((*tokens)->type == WORD)
-			(*cmd)[i] = (*tokens)->content;
+		if ((*tokens)->type == WORD && is_builtin((*tokens)->content) == BUILTIN_NONE && i == 0)
+			(*cmd)[i] = get_cmd_path((*tokens)->content, envp_lst);
+		else if ((*tokens)->type == WORD)
+		{
+			(*cmd)[i] = ft_strdup((*tokens)->content);
+		}
 		*tokens = (*tokens)->next;
 		i++;
 	}
@@ -101,186 +143,210 @@ void	handle_error(char *str, int error_code)
 	}
 }
 
-void	close_fds(int *fd, int file)
+int	exec_builtin(char **args, t_list *envp_lst, enum e_builtin type)
 {
-	if (file != -1)
-		close(file);
-	close(fd[0]);
-	close(fd[1]);
+	if (type == ECHO)
+		return (ft_echo(args));
+	else if (type == CD)
+		return (ft_cd(args, envp_lst));
+	else if (type == PWD)
+		return (ft_pwd());
+	else if (type == EXPORT)
+		return (ft_export(args, envp_lst));
+	else if (type == UNSET)
+		return (ft_unset(args, envp_lst));
+	else if (type == ENV)
+		return (ft_env(envp_lst));
+	else if (type == EXIT)
+		return (ft_exit(args));
+	return (1);
 }
 
-bool	check_folder(char *path)
+int	exec_bin(char *cmd, char **args, char **envp)
 {
-	int	fd;
-
-	fd = open(path, O_WRONLY);
-	if (errno == 21)
-	{
-		if (fd != -1)
-			close(fd);
-		return (true);
-	}
-	if (fd != -1)
-		close(fd);
-	return (false);
-}
-
-void	exec_fullpath(char **args, char **envp)
-{
-	int	temp;
-
-	execve(args[0], args, envp);
-	temp = errno;
-	if (check_folder(args[0]))
-		(handle_error(args[0], 21), ft_arrayclear(args), exit(127));
-	if (temp == 2)
-		(handle_error(args[0], -1), ft_arrayclear(args), exit(127));
-	else if (temp != 8)
-		handle_error(args[0], temp);
+	execve(cmd, args, envp);
+	free(envp);
 	ft_arrayclear(args);
-	exit(126);
+	return (1);
 }
 
-void	exec(char **cmd, t_list *envp_lst)
+
+int	wait_process(int pid)
 {
-	char **envp;
+	int	status;
+	int	ret_value;
+	int	cur_pid;
 
-	// printf("%s\n", cmd[0]);
-	if (!cmd[0])
-		(handle_error("''", -1), exit(127));
-	envp = env_lst_to_str(envp_lst);
-	if (cmd[0][0] == '/')
-		exec_fullpath(cmd, envp);
-	// if (check_path_cmd(cmd[0], envp) == 1)
-	// 	(handle_error(cmd[0], -1), ft_arrayclear(cmd), exit(127));
-	// else if (check_path_cmd(cmd[0], envp) == 2)
-	// 	(handle_error(cmd[0], 13), ft_arrayclear(cmd), exit(127));
-	// cmd[0] = get_path_cmd(cmd[0], envp);
-	// execve(cmd[0], cmd, envp);
-	// handle_error("Exec", errno);
-	ft_arrayclear(cmd);
-	// free(cmd);
-	exit(127);
-}
-
-void	file_bonus(char *file, bool mode, int *fd, bool here_doc)
-{
-	int	file_fd;
-
-	if (mode && !here_doc)
-		file_fd = open(file, O_RDONLY);
-	else if (!mode && !here_doc)
-		file_fd = open(file, O_WRONLY | O_CREAT | O_TRUNC, 0777);
-	else if (mode && here_doc)
-		file_fd = open(".here_doc", O_RDONLY);
-	else
-		file_fd = open(file, O_WRONLY | O_CREAT | O_APPEND, 0777);
-	if (file_fd < 0 && mode)
-		(handle_error(file, errno), close_fds(fd, -1), exit(1));
-	else if (file_fd < 0 && !mode)
-		(handle_error(file, errno), close_fds(fd, -1), exit(1));
-	if (mode)
+	while (true)
 	{
-		dup2(file_fd, STDIN_FILENO);
-		close(file_fd);
+		cur_pid = wait(&status);
+		if (cur_pid == -1)
+			break ;
+		if (cur_pid != pid)
+			continue ;
+		if (WIFEXITED(status))
+			ret_value = WEXITSTATUS(status);
+		else
+			return (128 + WTERMSIG(status));
 	}
-	else
-	{
-		dup2(file_fd, STDOUT_FILENO);
-		close(file_fd);
-	}
+	return (ret_value);
 }
 
-int	pipex_bonus(char **cmd, t_list *envp, int state)
+
+int	pipeline(char ***cmd, t_list *envp_lst)
 {
-	pid_t	pid;
 	int		fd[2];
+	int		fdd = 0;
+	char	**envp;
+	enum e_builtin	type;
+	pid_t	pid;
 
-	if (pipe(fd) < 0)
-		(handle_error("Pipe", errno), exit(1));
-	pid = fork();
-	if (pid < 0)
-		(handle_error("Fork", errno), exit(1));
-	if (pid == 0)
+	envp = env_lst_to_str(envp_lst);
+	while (*cmd)
 	{
-		if (state <= 0)
+		type = is_builtin(*cmd[0]);
+		if (type != BUILTIN_NONE)
 		{
-			if (state == -1)
-				file_bonus("/dev/stdin", true, fd, (state == -2));
-			dup2(fd[1], STDOUT_FILENO);
-			close_fds(fd, -1);
+			exec_builtin(*cmd, envp_lst, type);
+			return (0);
+		}
+		if (pipe(fd) == -1)
+		{
+			perror("pipe");
+			exit(1);
+		}
+		pid = fork();
+		if (pid == -1)
+		{
+			perror("fork");
+			exit(1);
+		}
+		else if (pid == 0)
+		{
+			dup2(fdd, 0);
+			if (*(cmd + 1) != NULL)
+				dup2(fd[1], 1);
+			close(fd[0]);
+			close(fd[1]);
+			exec_bin((*cmd)[0], *cmd, envp);
+			exit(1);
 		}
 		else
-			file_bonus("/dev/stdout", false, fd, (state == 2));
-		close_fds(fd, -1);
-		exec(cmd, envp);
+		{
+			// close(fd[0]);
+			close(fd[1]);
+			fdd = fd[0];
+			cmd++;
+		}
 	}
-	dup2(fd[0], STDIN_FILENO);
-	close_fds(fd, -1);
+	free(envp);
 	return (pid);
 }
 
-void	pipex(size_t nbr_cmd, char ***cmd, t_list *envp)
+void execute(char ***cmd, char *infile, char *outfile, t_list *envp_lst)
 {
-	size_t	i;
+	//save in/out
+	int	tmpin = dup(0);
+	int	tmpout = dup(1);
+	char **envp = env_lst_to_str(envp_lst);
 
-	i = 0;
-	pipex_bonus(cmd[i], envp, -1);
-	while (i < nbr_cmd - 1)
+	//set the initial input
+	int	fdin;
+	if (infile)
+		fdin = open(infile, O_RDONLY);
+	else
+	// Use default input
+		fdin = dup(tmpin);
+	int	ret;
+	int	fdout;
+	while (*cmd)
 	{
-		pipex_bonus(cmd[i], envp, 0);
-		i++;
-	}
-	pipex_bonus(cmd[i], envp, 1);
-	// 			, argv[argc - 1], state)
-	// return (wait_process(pipex_bonus(argv[argc - 2], envp
-	// 			, argv[argc - 1], state)));
-}
+		//redirect input
+		dup2(fdin, 0);
+		close(fdin);
+		//setup output
+		if (*(cmd + 1) == NULL)
+		{
+			// Last simple command
+			if (outfile)
+				fdout = open(outfile, O_WRONLY);
+			else
+				// Use default output
+				fdout = dup(tmpout);
+		}
+		else
+		{
+			// Not last
+			//simple command
+			//create pipe
+			int fdpipe[2];
+			pipe(fdpipe);
+			fdout = fdpipe[1];
+			fdin = fdpipe[0];
+		}// if/else
 
-void	exec_one(char **cmd, t_list *envp_lst)
-{
-	int		temp;
-	pid_t	pid;
-	char	**envp;
+		// Redirect output
+		dup2(fdout,1);
+		close(fdout);
 
-	pid = fork();
-	if (pid < 0)
-		(handle_error("Fork", errno), exit(1));
-	if (pid == 0)
-	{
-		envp = env_lst_to_str(envp_lst);
-		execve(cmd[0], cmd, envp);
-		temp = errno;
-		if (check_folder(cmd[0]))
-			(handle_error(cmd[0], 21), ft_arrayclear(cmd), exit(127));
-		if (temp == 2)
-			(handle_error(cmd[0], -1), ft_arrayclear(cmd), exit(127));
-		else if (temp != 8)
-			handle_error(cmd[0], temp);
-		ft_arrayclear(cmd);
-		exit(126);
-	}
-	waitpid(pid, NULL, 0);
-}
+		// Create child process
+		enum e_builtin type = is_builtin(*(cmd)[0]);
+		if (type != BUILTIN_NONE)
+		{
+			exec_builtin(*cmd, envp_lst, type);
+			return ;
+		}
+		ret = fork();
+		if (ret == 0)
+		{
+			execve(*(cmd)[0], *cmd, envp);
+			perror("fork");
+			exit(1);
+		}
+		cmd++;
+	} // for
 
-void	execuction(t_token *tokens, t_list *envp)
+	//restore in/out defaults
+	dup2(tmpin,0);
+	dup2(tmpout,1);
+	close(tmpin);
+	close(tmpout);
+	ft_free(envp);
+
+	// Wait for last command
+	waitpid(ret, NULL, 0);
+
+} // execute
+
+void	execution(t_token *tokens, t_list *envp_lst)
 {
 	size_t	i;
 	size_t	nbr_cmd;
 	char	***cmd;
 
+	if (!tokens)
+		return ;
 	i = 0;
-	nbr_cmd = get_command_number(tokens);
+	nbr_cmd = get_cmd_nbr(tokens);
 	cmd = ft_calloc(nbr_cmd + 1, sizeof(char **));
 	while (tokens)
 	{
 		if (tokens->type == WORD)
-			fill_command(&tokens, &cmd[i]);
-		// print_command(cmd[i]);
+			fill_command(&tokens, &cmd[i], envp_lst);
 		if (tokens)
 			tokens = tokens->next;
 		i++;
 	}
-	exec_one(cmd[0], envp);
-	// pipex(nbr_cmd, cmd, envp);
+	execute(cmd, NULL, NULL, envp_lst);
+	// int pid = pipeline(cmd, envp_lst);
+	// wait_process(pid);
+	i = 0;
+	while (cmd[i])
+	{
+		ft_arrayclear(cmd[i]);
+		cmd[i] = NULL;
+		i++;
+	}
+	ft_free(cmd);
+	cmd = NULL;
 }

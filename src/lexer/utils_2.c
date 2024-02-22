@@ -46,7 +46,7 @@ void	is_quoted(char c, int *quoted)
  *
  * @param str A string to check
  * @return An enumeration token type of the operator,
- * otherwise enumeration token type NONE
+ * otherwise enumeration token type TOKEN_NONE
  */
 
 enum e_tokentype	is_operator(char *str)
@@ -63,5 +63,5 @@ enum e_tokentype	is_operator(char *str)
 		return (PIPE);
 	else if (str[0] != ' ')
 		return (WORD);
-	return (NONE);
+	return (TOKEN_NONE);
 }

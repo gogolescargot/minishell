@@ -30,7 +30,7 @@ extern int	g_exit_code;
 
 enum e_tokentype
 {
-	NONE,
+	TOKEN_NONE,
 	WORD,
 	Q_WORD,
 	HEREDOC,
@@ -38,6 +38,18 @@ enum e_tokentype
 	O_FILE_TRUNC,
 	O_FILE_APPEND,
 	PIPE
+};
+
+enum e_builtin
+{
+	BUILTIN_NONE,
+	ECHO,
+	ENV,
+	PWD,
+	EXIT,
+	CD,
+	EXPORT,
+	UNSET,
 };
 
 typedef struct s_token
@@ -63,8 +75,8 @@ typedef struct s_data
 }	t_data;
 
 t_token				*lexer(char *str);
-t_token				*expander(t_token *lst, t_list *envp);
-void				execuction(t_token *tokens, t_list *envp);
+void				expander(t_token *lst, t_list *envp);
+void				execution(t_token *tokens, t_list *envp_lst);
 
 bool				is_space(char c);
 bool				is_quote(char c);
@@ -72,16 +84,18 @@ bool				is_env(char *s1, char *s2);
 bool				is_interpreted_quote(char c, int quoted);
 void				is_quoted(char c, int *quoted);
 enum e_tokentype	is_operator(char *str);
+enum e_builtin		is_builtin(char *str);
 
 char				*get_env(char *str, t_list *envp);
 void				update_env(t_list *envp, char *key, char *value);
 size_t				getenv_skip(char *str);
 
 int					check_token(t_token *lst);
-void				addback_token(t_token **lst,
-						enum e_tokentype type, char *content);
 size_t				content_len(char *str, t_list *envp);
 
+void				token_addback(t_token **lst,
+						enum e_tokentype type, char *content);
+void				token_clear(t_token **lst, void (*del)(void *));
 
 int					ft_echo(char **cmd);
 int					ft_env(t_list *envp);

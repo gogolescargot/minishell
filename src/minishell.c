@@ -55,14 +55,9 @@ int	main(int argc, char **argv, char **envp)
 			add_history(line);
 			lst = lexer(line);
 			expander(lst, envp_lst);
-			execuction(lst, envp_lst);
-			// while (lst)
-			// {
-			// 	if (lst->content)
-			// 		printf("%s\n", lst->content);
-			// 	lst = lst->next;
-			// }
-			free(line);
+			execution(lst, envp_lst);
+			ft_free(line);
+			token_clear(&lst, ft_free);
 		}
 	}
 	ft_lstclear(&envp_lst, ft_free);

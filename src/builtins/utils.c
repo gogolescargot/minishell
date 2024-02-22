@@ -19,23 +19,25 @@
  * @return True if the string is a builtin function, otherwise False
  */
 
-bool	is_builtin(char *str)
+enum e_builtin	is_builtin(char *str)
 {
+	if (!str)
+		return (BUILTIN_NONE);
 	if (!ft_strncmp(str, "echo", 5))
-		return (true);
+		return (ECHO);
 	else if (!ft_strncmp(str, "cd", 3))
-		return (true);
+		return (CD);
 	else if (!ft_strncmp(str, "pwd", 4))
-		return (true);
+		return (PWD);
 	else if (!ft_strncmp(str, "export", 7))
-		return (true);
+		return (EXPORT);
 	else if (!ft_strncmp(str, "unset", 6))
-		return (true);
+		return (UNSET);
 	else if (!ft_strncmp(str, "env", 4))
-		return (true);
+		return (ENV);
 	else if (!ft_strncmp(str, "exit", 5))
-		return (true);
-	return (false);
+		return (EXIT);
+	return (BUILTIN_NONE);
 }
 
 /*

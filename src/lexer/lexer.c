@@ -28,7 +28,7 @@ char	*tokenizer(char *str, size_t *spc)
 	quoted = 0;
 	while (str[*spc] && is_space(str[*spc]))
 		(*spc)++;
-	while (str[*spc] && !(((is_operator(str + *spc) != NONE
+	while (str[*spc] && !(((is_operator(str + *spc) != TOKEN_NONE
 					&& is_operator(str + *spc) != WORD)
 				|| is_space(str[*spc])) && !quoted))
 	{
@@ -96,9 +96,9 @@ t_token	*lexer(char *str)
 		else if (type != WORD)
 			i += 1;
 		if (type == PIPE)
-			addback_token(&lst, type, NULL);
-		else if (type != NONE)
-			addback_token(&lst, type, tokenizer(str, &i));
+			token_addback(&lst, type, NULL);
+		else if (type != TOKEN_NONE)
+			token_addback(&lst, type, tokenizer(str, &i));
 	}
 	if (check_token(lst) != 0)
 		print_error(check_token(lst));

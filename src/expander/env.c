@@ -43,6 +43,8 @@ char	*getenv_name(char *str)
 	i = 0;
 	while (str[i] && !is_space(str[i]) && !is_quote(str[i]) && str[i] != '$')
 		i++;
+	if (i == 0)
+		return (NULL);
 	return (ft_substr(str, 0, i));
 }
 
@@ -56,13 +58,21 @@ char	*getenv_name(char *str)
 
 char	*get_env(char *str, t_list *envp)
 {
-	if (!ft_strncmp(getenv_name(str), "?", 2))
-		return (ft_itoa(g_exit_code));
+	char	*env_name;
+	size_t	len;
+
+	env_name = getenv_name(str);
+	len = ft_strlen(env_name);
+	if (!env_name)
+		return ("$");
+	if (!ft_strncmp(env_name, "?", 2))
+		return (free(env_name), ft_itoa(g_exit_code));
 	while (envp)
 	{
-		if (is_env(envp->content, getenv_name(str)))
-			return (envp->content + ft_strlen(getenv_name(str)) + 1);
+		if (is_env(envp->content, env_name))
+			return (free(env_name), envp->content + len + 1);
 		envp = envp->next;
 	}
+	free(env_name);
 	return (NULL);
 }
