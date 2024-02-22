@@ -245,51 +245,39 @@ int	pipeline(char ***cmd, t_list *envp_lst)
 
 void execute(char ***cmd, char *infile, char *outfile, t_list *envp_lst)
 {
-	//save in/out
 	int	tmpin = dup(0);
 	int	tmpout = dup(1);
 	char **envp = env_lst_to_str(envp_lst);
 
-	//set the initial input
 	int	fdin;
 	if (infile)
 		fdin = open(infile, O_RDONLY);
 	else
-	// Use default input
 		fdin = dup(tmpin);
 	int	ret;
 	int	fdout;
 	while (*cmd)
 	{
-		//redirect input
 		dup2(fdin, 0);
 		close(fdin);
-		//setup output
 		if (*(cmd + 1) == NULL)
 		{
-			// Last simple command
 			if (outfile)
 				fdout = open(outfile, O_WRONLY);
 			else
-				// Use default output
 				fdout = dup(tmpout);
 		}
 		else
 		{
-			// Not last
-			//simple command
-			//create pipe
 			int fdpipe[2];
 			pipe(fdpipe);
 			fdout = fdpipe[1];
 			fdin = fdpipe[0];
-		}// if/else
+		}
 
-		// Redirect output
 		dup2(fdout,1);
 		close(fdout);
 
-		// Create child process
 		enum e_builtin type = is_builtin(*(cmd)[0]);
 		if (type != BUILTIN_NONE)
 		{
@@ -304,19 +292,17 @@ void execute(char ***cmd, char *infile, char *outfile, t_list *envp_lst)
 			exit(1);
 		}
 		cmd++;
-	} // for
+	}
 
-	//restore in/out defaults
 	dup2(tmpin,0);
 	dup2(tmpout,1);
 	close(tmpin);
 	close(tmpout);
 	ft_free(envp);
 
-	// Wait for last command
 	waitpid(ret, NULL, 0);
 
-} // execute
+}
 
 void	execution(t_token *tokens, t_list *envp_lst)
 {
