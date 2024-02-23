@@ -101,7 +101,10 @@ t_token	*lexer(char *str)
 			token_addback(&lst, type, tokenizer(str, &i));
 	}
 	if (check_token(lst) != 0)
+	{
 		print_error(check_token(lst));
-	// print_token(lst);
+		token_clear(&lst, ft_free);
+		return (NULL);
+	}
 	return (lst);
 }

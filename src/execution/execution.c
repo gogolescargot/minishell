@@ -86,7 +86,8 @@ void	fill_command(t_token **tokens, char ***cmd, t_list *envp_lst)
 	*cmd = ft_calloc(get_cmd_size(*tokens) + 1, sizeof(char *));
 	while (*tokens && (*tokens)->type != PIPE)
 	{
-		if ((*tokens)->type == WORD && is_builtin((*tokens)->content) == BUILTIN_NONE && i == 0)
+		if ((*tokens)->type == WORD
+			&& is_builtin((*tokens)->content) == BUILTIN_NONE && i == 0)
 			(*cmd)[i] = get_cmd_path((*tokens)->content, envp_lst);
 		else if ((*tokens)->type == WORD)
 		{
@@ -162,16 +163,20 @@ int	exec_builtin(char **args, t_list *envp_lst, enum e_builtin type)
 	return (1);
 }
 
-int	exec_bin(char *cmd, char **args, char **envp)
+void	exec_bin(char **cmd, char **envp, t_redir redir, pid_t *pid)
 {
-	execve(cmd, args, envp);
-	free(envp);
-	ft_arrayclear(args);
-	return (1);
+	*pid = fork();
+	if (*pid == 0)
+	{
+		close(redir.fdin);
+		close(redir.fdout);
+		execve(cmd[0], cmd, envp);
+		perror(cmd[0]);
+		exit(1);
+	}
 }
 
-
-int	wait_process(int pid)
+int	wait_process(pid_t pid)
 {
 	int	status;
 	int	ret_value;
@@ -192,116 +197,77 @@ int	wait_process(int pid)
 	return (ret_value);
 }
 
-
-int	pipeline(char ***cmd, t_list *envp_lst)
+void	execute_init(char ***envp, t_list *envp_lst, t_redir *redir)
 {
-	int		fd[2];
-	int		fdd = 0;
-	char	**envp;
-	enum e_builtin	type;
-	pid_t	pid;
-
-	envp = env_lst_to_str(envp_lst);
-	while (*cmd)
-	{
-		type = is_builtin(*cmd[0]);
-		if (type != BUILTIN_NONE)
-		{
-			exec_builtin(*cmd, envp_lst, type);
-			return (0);
-		}
-		if (pipe(fd) == -1)
-		{
-			perror("pipe");
-			exit(1);
-		}
-		pid = fork();
-		if (pid == -1)
-		{
-			perror("fork");
-			exit(1);
-		}
-		else if (pid == 0)
-		{
-			dup2(fdd, 0);
-			if (*(cmd + 1) != NULL)
-				dup2(fd[1], 1);
-			close(fd[0]);
-			close(fd[1]);
-			exec_bin((*cmd)[0], *cmd, envp);
-			exit(1);
-		}
-		else
-		{
-			// close(fd[0]);
-			close(fd[1]);
-			fdd = fd[0];
-			cmd++;
-		}
-	}
-	free(envp);
-	return (pid);
+	*envp = env_lst_to_str(envp_lst);
+	(*redir).tmp_fdin = dup(0);
+	(*redir).tmp_fdout = dup(1);
 }
 
-void execute(char ***cmd, char *infile, char *outfile, t_list *envp_lst)
+void	execute_end(char ***envp, t_redir redir)
 {
-	int	tmpin = dup(0);
-	int	tmpout = dup(1);
-	char **envp = env_lst_to_str(envp_lst);
+	dup2(redir.tmp_fdin, 0);
+	dup2(redir.tmp_fdout, 1);
+	close(redir.tmp_fdin);
+	close(redir.tmp_fdout);
+	ft_free(*envp);
+}
 
-	int	fdin;
+void	redirection_in(t_redir *redir, char *infile)
+{
 	if (infile)
-		fdin = open(infile, O_RDONLY);
+		(*redir).fdin = open(infile, O_RDONLY);
 	else
-		fdin = dup(tmpin);
-	int	ret;
-	int	fdout;
+		(*redir).fdin = dup(redir->tmp_fdin);
+}
+
+void	redirection_pipe(t_redir *redir)
+{
+	int	fd[2];
+
+	if (pipe(fd) < 0)
+	{
+		perror("pipe");
+		exit(1);
+	}
+	(*redir).fdin = fd[0];
+	(*redir).fdout = fd[1];
+}
+
+void	redirection_out(t_redir *redir, char *outfile)
+{
+	if (outfile)
+		(*redir).fdout = open(outfile, O_WRONLY);
+	else
+		(*redir).fdout = dup(redir->tmp_fdout);
+}
+
+void	execute(char ***cmd, char *infile, char *outfile, t_list *envp_lst)
+{
+	t_redir			redir;
+	pid_t			pid;
+	char			**envp;
+
+	execute_init(&envp, envp_lst, &redir);
+	redirection_in(&redir, infile);
 	while (*cmd)
 	{
-		dup2(fdin, 0);
-		close(fdin);
+		dup2(redir.fdin, 0);
+		close(redir.fdin);
 		if (*(cmd + 1) == NULL)
-		{
-			if (outfile)
-				fdout = open(outfile, O_WRONLY);
-			else
-				fdout = dup(tmpout);
-		}
+			redirection_out(&redir, outfile);
 		else
-		{
-			int fdpipe[2];
-			pipe(fdpipe);
-			fdout = fdpipe[1];
-			fdin = fdpipe[0];
-		}
-
-		dup2(fdout,1);
-		close(fdout);
-
-		enum e_builtin type = is_builtin(*(cmd)[0]);
-		if (type != BUILTIN_NONE)
-		{
-			exec_builtin(*cmd, envp_lst, type);
-			return ;
-		}
-		ret = fork();
-		if (ret == 0)
-		{
-			execve(*(cmd)[0], *cmd, envp);
-			perror("fork");
-			exit(1);
-		}
+			redirection_pipe(&redir);
+		dup2(redir.fdout, 1);
+		close(redir.fdout);
+		if (is_builtin(*(cmd)[0]) != BUILTIN_NONE)
+			exec_builtin(*cmd, envp_lst, is_builtin(*(cmd)[0]));
+		else
+			exec_bin(*cmd, envp, redir, &pid);
 		cmd++;
 	}
-
-	dup2(tmpin,0);
-	dup2(tmpout,1);
-	close(tmpin);
-	close(tmpout);
-	ft_free(envp);
-
-	waitpid(ret, NULL, 0);
-
+	execute_end(&envp, redir);
+	wait_process(pid);
 }
 
 void	execution(t_token *tokens, t_list *envp_lst)
@@ -324,8 +290,6 @@ void	execution(t_token *tokens, t_list *envp_lst)
 		i++;
 	}
 	execute(cmd, NULL, NULL, envp_lst);
-	// int pid = pipeline(cmd, envp_lst);
-	// wait_process(pid);
 	i = 0;
 	while (cmd[i])
 	{

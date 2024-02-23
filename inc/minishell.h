@@ -21,7 +21,7 @@
 # include <errno.h>
 # include <fcntl.h>
 # include <sys/stat.h>
- #include <sys/wait.h> 
+# include <sys/wait.h> 
 # include <readline/readline.h>
 # include <readline/history.h>
 # include "../libft/inc/libft.h"
@@ -68,6 +68,14 @@ typedef struct s_expand
 	size_t	j;
 	int		quoted;
 }	t_expand;
+
+typedef struct s_redir
+{
+	int		fdin;
+	int		fdout;
+	int		tmp_fdin;
+	int		tmp_fdout;
+}	t_redir;
 
 typedef struct s_data
 {
