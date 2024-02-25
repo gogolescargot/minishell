@@ -86,15 +86,16 @@ void	fill_command(t_token **tokens, char ***cmd, t_list *envp_lst)
 	*cmd = ft_calloc(get_cmd_size(*tokens) + 1, sizeof(char *));
 	while (*tokens && (*tokens)->type != PIPE)
 	{
-		if ((*tokens)->type == WORD
+		if ((*tokens)->type == WORD && !(*tokens)->content[0])
+			(*cmd)[i++] = ft_strdup((*tokens)->content);
+		else if ((*tokens)->type == WORD
 			&& is_builtin((*tokens)->content) == BUILTIN_NONE && i == 0)
-			(*cmd)[i] = get_cmd_path((*tokens)->content, envp_lst);
+			(*cmd)[i++] = get_cmd_path((*tokens)->content, envp_lst);
 		else if ((*tokens)->type == WORD)
 		{
-			(*cmd)[i] = ft_strdup((*tokens)->content);
+			(*cmd)[i++] = ft_strdup((*tokens)->content);
 		}
 		*tokens = (*tokens)->next;
-		i++;
 	}
 }
 
@@ -163,14 +164,23 @@ int	exec_builtin(char **args, t_list *envp_lst, enum e_builtin type)
 	return (1);
 }
 
+void	ft_close(int fd)
+{
+	if (fd > 2)
+		close(fd);
+}
+
 void	exec_bin(char **cmd, char **envp, t_redir redir, pid_t *pid)
 {
 	*pid = fork();
 	if (*pid == 0)
 	{
-		close(redir.fdin);
-		close(redir.fdout);
-		execve(cmd[0], cmd, envp);
+		ft_close(redir.tmp_fdin);
+		ft_close(redir.tmp_fdout);
+		ft_close(redir.fdin);
+		ft_close(redir.fdout);
+		if (cmd[0])
+			execve(cmd[0], cmd, envp);
 		perror(cmd[0]);
 		exit(1);
 	}
@@ -200,24 +210,78 @@ int	wait_process(pid_t pid)
 void	execute_init(char ***envp, t_list *envp_lst, t_redir *redir)
 {
 	*envp = env_lst_to_str(envp_lst);
-	(*redir).tmp_fdin = dup(0);
-	(*redir).tmp_fdout = dup(1);
+	(*redir).tmp_fdin = dup(STDIN_FILENO);
+	(*redir).tmp_fdout = dup(STDOUT_FILENO);
 }
 
 void	execute_end(char ***envp, t_redir redir)
 {
-	dup2(redir.tmp_fdin, 0);
-	dup2(redir.tmp_fdout, 1);
-	close(redir.tmp_fdin);
-	close(redir.tmp_fdout);
+	dup2(redir.tmp_fdin, STDIN_FILENO);
+	dup2(redir.tmp_fdout, STDOUT_FILENO);
+	ft_close(redir.tmp_fdin);
+	ft_close(redir.tmp_fdout);
 	ft_free(*envp);
 }
 
-void	redirection_in(t_redir *redir, char *infile)
+int	heredoc(char *limiter)
 {
-	if (infile)
-		(*redir).fdin = open(infile, O_RDONLY);
-	else
+	char	*line;
+	int		fd;
+
+	fd = open(".here_doc", O_WRONLY | O_CREAT | O_TRUNC, 0644);
+	if (fd < 0)
+		return (perror(".here_doc"), -1);
+	while (1)
+	{
+		line = readline("> ");
+		if (!line)
+			return (ft_close(fd), unlink(".here_doc"), -1);
+		if (!ft_strncmp(line, limiter, ft_strlen(limiter) + 1))
+		{
+			ft_close(fd);
+			fd = open(".here_doc", O_RDONLY);
+			free(line);
+			return (fd);
+		}
+		ft_putendl_fd(line, fd);
+		free(line);
+	}
+	close(fd);
+	unlink(".here_doc");
+	return (-1);
+}
+
+void	ft_close_unlink(int fd, char *file)
+{
+	ft_close(fd);
+	unlink(file);
+}
+
+void	redirection_in(t_redir *redir, t_token *tokens)
+{
+	int		fd;
+	bool	trigger;
+
+	trigger = false;
+	fd = -1;
+	while (tokens)
+	{
+		if (tokens->type == I_FILE || tokens->type == HEREDOC)
+		{
+			if (fd != -1)
+				ft_close_unlink(fd, ".here_doc");
+			if (tokens->type == I_FILE)
+				fd = open(tokens->content, O_RDONLY);
+			else
+				fd = heredoc(tokens->content);
+			if (fd < 0)
+				return (perror(tokens->content));
+			(*redir).fdin = fd;
+			trigger = true;
+		}
+		tokens = tokens->next;
+	}
+	if (!trigger)
 		(*redir).fdin = dup(redir->tmp_fdin);
 }
 
@@ -234,32 +298,52 @@ void	redirection_pipe(t_redir *redir)
 	(*redir).fdout = fd[1];
 }
 
-void	redirection_out(t_redir *redir, char *outfile)
+void	redirection_out(t_redir *redir, t_token *tokens)
 {
-	if (outfile)
-		(*redir).fdout = open(outfile, O_WRONLY);
-	else
+	int		fd;
+	bool	trigger;
+
+	trigger = false;
+	fd = -1;
+	while (tokens)
+	{
+		if (tokens->type == O_FILE_TRUNC || tokens->type == O_FILE_APPEND)
+		{
+			if (fd != -1)
+				ft_close(fd);
+			if (tokens->type == O_FILE_TRUNC)
+				fd = open(tokens->content, O_WRONLY | O_CREAT | O_TRUNC, 0644);
+			else
+				fd = open(tokens->content, O_WRONLY | O_CREAT | O_APPEND, 0644);
+			if (fd < 0)
+				return (perror(tokens->content));
+			(*redir).fdout = fd;
+			trigger = true;
+		}
+		tokens = tokens->next;
+	}
+	if (!trigger)
 		(*redir).fdout = dup(redir->tmp_fdout);
 }
 
-void	execute(char ***cmd, char *infile, char *outfile, t_list *envp_lst)
+void	execute(char ***cmd, t_token *tokens, t_list *envp_lst)
 {
 	t_redir			redir;
 	pid_t			pid;
 	char			**envp;
 
 	execute_init(&envp, envp_lst, &redir);
-	redirection_in(&redir, infile);
+	redirection_in(&redir, tokens);
 	while (*cmd)
 	{
-		dup2(redir.fdin, 0);
-		close(redir.fdin);
+		dup2(redir.fdin, STDIN_FILENO);
+		ft_close(redir.fdin);
 		if (*(cmd + 1) == NULL)
-			redirection_out(&redir, outfile);
+			redirection_out(&redir, tokens);
 		else
 			redirection_pipe(&redir);
-		dup2(redir.fdout, 1);
-		close(redir.fdout);
+		dup2(redir.fdout, STDOUT_FILENO);
+		ft_close(redir.fdout);
 		if (is_builtin(*(cmd)[0]) != BUILTIN_NONE)
 			exec_builtin(*cmd, envp_lst, is_builtin(*(cmd)[0]));
 		else
@@ -274,22 +358,23 @@ void	execution(t_token *tokens, t_list *envp_lst)
 {
 	size_t	i;
 	size_t	nbr_cmd;
+	t_token	*current;
 	char	***cmd;
 
+	current = tokens;
 	if (!tokens)
 		return ;
 	i = 0;
 	nbr_cmd = get_cmd_nbr(tokens);
 	cmd = ft_calloc(nbr_cmd + 1, sizeof(char **));
-	while (tokens)
+	while (current)
 	{
-		if (tokens->type == WORD)
-			fill_command(&tokens, &cmd[i], envp_lst);
-		if (tokens)
-			tokens = tokens->next;
-		i++;
+		if (current->type == WORD)
+			fill_command(&current, &cmd[i++], envp_lst);
+		if (current)
+			current = current->next;
 	}
-	execute(cmd, NULL, NULL, envp_lst);
+	execute(cmd, tokens, envp_lst);
 	i = 0;
 	while (cmd[i])
 	{

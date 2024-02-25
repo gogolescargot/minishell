@@ -115,4 +115,5 @@ int					ft_unset(char **cmd, t_list *envp);
 
 void				signal_handler(int code);
 
+void				print_token(t_token *lst);
 #endif

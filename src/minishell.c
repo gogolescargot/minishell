@@ -55,6 +55,7 @@ int	main(int argc, char **argv, char **envp)
 			add_history(line);
 			lst = lexer(line);
 			if (!lst)
+				continue ;
 			expander(lst, envp_lst);
 			execution(lst, envp_lst);
 			ft_free(line);
