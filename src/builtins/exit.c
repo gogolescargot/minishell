@@ -25,9 +25,9 @@ void	exit_error(char *str)
 	{
 		ft_putstr_fd(str, 2);
 		ft_putstr_fd(": Numeric argument required\n", 2);
-		return ;
 	}
-	ft_putstr_fd("Too many arguments\n", 2);
+	else
+		ft_putstr_fd("Too many arguments\n", 2);
 	exit(2);
 }
 

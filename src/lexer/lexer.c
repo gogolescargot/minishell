@@ -103,6 +103,7 @@ t_token	*lexer(char *str)
 	if (check_token(lst) != 0)
 	{
 		print_error(check_token(lst));
+		g_exit_code = 1;
 		token_clear(&lst, ft_free);
 		return (NULL);
 	}

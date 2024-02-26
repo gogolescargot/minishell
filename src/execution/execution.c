@@ -51,6 +51,8 @@ void	wait_process(int pid)
 	int	ret_value;
 	int	cur_pid;
 
+	if (pid == -1)
+		return ;
 	while (true)
 	{
 		cur_pid = wait(&status);

@@ -18,6 +18,7 @@ void	commands_execute(char ***cmd, t_token *tokens, t_list *envp_lst)
 	pid_t			pid;
 	char			**envp;
 
+	pid = -1;
 	redirection_init(&envp, envp_lst, &redir);
 	if (redirection_in(&redir, tokens) || redirection_out(&redir, tokens))
 		return ;
