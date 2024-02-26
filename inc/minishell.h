@@ -71,6 +71,7 @@ typedef struct s_expand
 
 typedef struct s_redir
 {
+	int		file_fdout;
 	int		fdin;
 	int		fdout;
 	int		tmp_fdin;
@@ -115,5 +116,34 @@ int					ft_unset(char **cmd, t_list *envp);
 
 void				signal_handler(int code);
 
-void				print_token(t_token *lst);
+size_t				get_cmd_nbr(t_token *tokens);
+size_t				get_cmd_size(t_token *tokens);
+char				*get_cmd_path(char *cmd, t_list *envp_lst);
+char				**env_lst_to_str(t_list *envp_lst);
+
+void				commands_fill(t_token *tokens,
+						t_list *envp_lst, char ****cmd);
+void				commands_execute(char ***cmd,
+						t_token *tokens, t_list *envp_lst);
+void				commands_clear(char ****cmd);
+
+void				ft_close(int fd);
+void				ft_close_unlink(int fd, char *file);
+int					handle_error(char *str, int error_code);
+
+void				wait_process(int pid);
+void				exec_bin(char **cmd, char **envp,
+						t_redir redir, pid_t *pid);
+void				exec_builtin(char **args,
+						t_list *envp_lst, enum e_builtin type);
+
+void				redirection_init(char ***envp,
+						t_list *envp_lst, t_redir *redir);
+void				redirection_end(char ***envp, t_redir redir);
+int					redirection_in(t_redir *redir, t_token *tokens);
+int					redirection_pipe(t_redir *redir);
+int					redirection_out(t_redir *redir, t_token *tokens);
+
+int					heredoc(char *limiter);
+
 #endif

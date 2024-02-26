@@ -17,14 +17,14 @@ void	signal_handler(int code)
 	if (code == 0)
 	{
 		printf("exit\n");
-		exit(0);
+		exit(g_exit_code);
 	}
 	else if (code == 2)
 	{
-		g_exit_code = 130;
 		printf("\n");
 		rl_on_new_line();
 		rl_replace_line("", 0);
 		rl_redisplay();
+		g_exit_code = 130;
 	}
 }

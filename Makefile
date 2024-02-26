@@ -29,7 +29,7 @@ LIBFT	=	$(LIBFT_DIR)libft.a
 FILE_C	=	minishell signal \
 			lexer/lexer lexer/token lexer/utils_1 lexer/utils_2 \
 			expander/expander expander/env expander/utils \
-			execution/execution \
+			execution/execution execution/commands execution/redir execution/path execution/utils execution/heredoc \
 			builtins/echo builtins/cd builtins/pwd builtins/export builtins/unset builtins/env builtins/exit builtins/utils \
 
 FILE_H	=	minishell
@@ -44,7 +44,7 @@ INCL	=	$(addsuffix .h, $(addprefix $(INCL_DIR), $(FILE_H)))
 
 CC			=	gcc
 
-CC_FLAGS	=	-Wall -Wextra -Werror
+CC_FLAGS	=	-Wall -Wextra -Werror -g3
 
 AR			=	ar
 
