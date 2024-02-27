@@ -66,7 +66,7 @@ bool	is_env(char *s1, char *s2)
  * @return 0 if the key is successfully updated, otherwise 1
  */
 
-void	update_env(t_list *envp, char *key, char *value)
+int	update_env(t_list *envp, char *key, char *value)
 {
 	size_t		len;
 	char		*str;
@@ -74,7 +74,7 @@ void	update_env(t_list *envp, char *key, char *value)
 	len = ft_strlen(key);
 	str = ft_calloc(len + ft_strlen(value) + 2, sizeof(char));
 	if (!str)
-		return ;
+		return (1);
 	ft_strlcpy(str, key, len + 1);
 	str[len] = '=';
 	ft_strlcpy(str + len + 1, value, ft_strlen(value) + 1);
@@ -85,7 +85,8 @@ void	update_env(t_list *envp, char *key, char *value)
 		envp = envp->next;
 	}
 	if (!envp)
-		return ;
-	free(envp->content);
+		return (0);
+	ft_free(envp->content);
 	envp->content = str;
+	return (0);
 }

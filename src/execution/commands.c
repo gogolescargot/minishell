@@ -12,36 +12,36 @@
 
 #include "../../inc/minishell.h"
 
-void	commands_execute(char ***cmd, t_token *tokens, t_list *envp_lst)
+void	commands_execute(t_data *data)
 {
-	t_redir			redir;
-	pid_t			pid;
-	char			**envp;
+	t_redir	redir;
+	pid_t	pid;
+	size_t	i;
 
 	pid = -1;
-	redirection_init(&envp, envp_lst, &redir);
-	if (redirection_in(&redir, tokens) || redirection_out(&redir, tokens))
+	i = 0;
+	if (redir_init(&redir, data))
 		return ;
-	while (*cmd)
+	while (data->cmd && data->cmd[i])
 	{
 		dup2(redir.fdin, STDIN_FILENO);
 		ft_close(redir.fdin);
-		if (*(cmd + 1) && redirection_pipe(&redir))
-			break ;
-		if (*(cmd + 1) == NULL)
+		if (data->cmd[i + 1] == NULL)
 			redir.fdout = redir.file_fdout;
+		else if (redir_pipe(&redir))
+			break ;
 		dup2(redir.fdout, STDOUT_FILENO);
 		ft_close(redir.fdout);
-		if (is_builtin(*(cmd)[0]) != BUILTIN_NONE)
-			exec_builtin(*cmd, envp_lst, redir, &pid);
+		if (is_builtin(data->cmd[i][0]) != BUILTIN_NONE)
+			exec_builtin(data->cmd[i], data, redir, &pid);
 		else
-			exec_bin(*cmd, envp, redir, &pid);
-		cmd++;
+			exec_bin(data->cmd[i], data, redir, &pid);
+		i++;
 	}
-	redirection_end(&envp, redir, pid);
+	redir_end(redir, pid);
 }
 
-void	command_fill(t_token **tokens, char ***cmd, t_list *envp_lst)
+int	command_fill(t_token **tokens, char ***cmd, t_list *envp_lst)
 {
 	size_t	i;
 
@@ -49,30 +49,39 @@ void	command_fill(t_token **tokens, char ***cmd, t_list *envp_lst)
 	*cmd = ft_calloc(get_cmd_size(*tokens) + 1, sizeof(char *));
 	while (*tokens && (*tokens)->type != PIPE)
 	{
-		if ((*tokens)->type == WORD
-			&& is_builtin((*tokens)->content) != BUILTIN_NONE)
-			(*cmd)[i++] = ft_strdup((*tokens)->content);
-		else if ((*tokens)->type == WORD
-			&& i == 0)
-			(*cmd)[i++] = get_cmd_path((*tokens)->content, envp_lst);
-		else if ((*tokens)->type == WORD)
-			(*cmd)[i++] = ft_strdup((*tokens)->content);
+		if ((*tokens)->type == WORD)
+		{
+			if (is_builtin((*tokens)->content) != BUILTIN_NONE)
+				(*cmd)[i] = ft_strdup((*tokens)->content);
+			else if (i == 0)
+				(*cmd)[i] = get_cmd_path((*tokens)->content, envp_lst);
+			else
+				(*cmd)[i] = ft_strdup((*tokens)->content);
+			if (!(*cmd)[i])
+				return (1);
+			i++;
+		}
 		*tokens = (*tokens)->next;
 	}
+	return (0);
 }
 
-void	commands_fill(t_token *tokens, t_list *envp_lst, char ****cmd)
+int	commands_fill(t_data data)
 {
 	size_t	i;
 
 	i = 0;
-	while (tokens)
+	while (data.tokens)
 	{
-		if (tokens->type == WORD)
-			command_fill(&tokens, &(*cmd)[i++], envp_lst);
-		if (tokens)
-			tokens = tokens->next;
+		if (data.tokens->type == WORD)
+		{
+			if (command_fill(&data.tokens, &data.cmd[i++], data.envp_lst))
+				return (1);
+		}
+		if (data.tokens)
+			data.tokens = data.tokens->next;
 	}
+	return (0);
 }
 
 void	commands_clear(char ****cmd)
@@ -80,6 +89,8 @@ void	commands_clear(char ****cmd)
 	size_t	i;
 
 	i = 0;
+	if (!(*cmd))
+		return ;
 	while ((*cmd)[i])
 	{
 		ft_arrayclear((*cmd)[i]);

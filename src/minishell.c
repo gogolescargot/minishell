@@ -14,6 +14,17 @@
 
 int	g_exit_code = 0;
 
+void	secure_exit(t_data **data, int error_code)
+{
+	ft_free((*data)->line);
+	ft_lstclear(&(*data)->envp_lst, ft_free);
+	token_clear(&(*data)->tokens, ft_free);
+	commands_clear(&(*data)->cmd);
+	unlink(".here_doc");
+	free(*data);
+	exit(error_code);
+}
+
 void	ignore_args(int argc, char **argv)
 {
 	(void)argc;
@@ -35,38 +46,44 @@ t_list	*init_envp(char **envp)
 	return (envp_lst);
 }
 
-t_list	*init_minishell(int argc, char **argv, char **envp)
+t_data	*init_minishell(int argc, char **argv, char **envp)
 {
+	t_data	*data;
+
+	data = malloc(sizeof(t_data));
+	data->envp = envp;
+	data->envp_lst = init_envp(envp);
+	data->tokens = NULL;
+	data->cmd = NULL;
 	ignore_args(argc, argv);
 	signal(SIGINT, signal_handler);
 	signal(SIGQUIT, SIG_IGN);
-	return (init_envp(envp));
+	return (data);
 }
 
 int	main(int argc, char **argv, char **envp)
 {
-	char	*line;
-	t_token	*lst;
-	t_list	*envp_lst;
+	t_data	*data;
 
-	envp_lst = init_minishell(argc, argv, envp);
+	data = init_minishell(argc, argv, envp);
 	while (1)
 	{
-		line = readline("minishell > ");
-		if (!line)
+		data->line = readline("minishell > ");
+		if (!data->line)
 			break ;
 		else
 		{
-			add_history(line);
-			lst = lexer(line);
-			if (!lst)
+			add_history(data->line);
+			data->tokens = lexer(data->line);
+			if (!data->tokens)
 				continue ;
-			expander(lst, envp_lst);
-			execution(lst, envp_lst);
-			ft_free(line);
-			token_clear(&lst, ft_free);
+			expander(data);
+			execution(data);
+			ft_free(data->line);
+			token_clear(&data->tokens, ft_free);
 		}
 	}
-	ft_lstclear(&envp_lst, ft_free);
-	signal_handler(0);
+	ft_lstclear(&data->envp_lst, ft_free);
+	printf("exit\n");
+	secure_exit(&data, g_exit_code);
 }

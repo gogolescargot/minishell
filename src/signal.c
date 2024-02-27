@@ -14,12 +14,7 @@
 
 void	signal_handler(int code)
 {
-	if (code == 0)
-	{
-		printf("exit\n");
-		exit(g_exit_code);
-	}
-	else if (code == 2)
+	if (code == 2)
 	{
 		printf("\n");
 		rl_on_new_line();

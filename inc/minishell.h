@@ -80,15 +80,16 @@ typedef struct s_redir
 
 typedef struct s_data
 {
-	t_token	tokens;
-	t_list	envp_lst;
+	t_token	*tokens;
+	t_list	*envp_lst;
 	char	***cmd;
 	char	**envp;
+	char	*line;
 }	t_data;
 
 t_token				*lexer(char *str);
-void				expander(t_token *lst, t_list *envp);
-void				execution(t_token *tokens, t_list *envp_lst);
+void				expander(t_data *data);
+void				execution(t_data *data);
 
 bool				is_space(char c);
 bool				is_quote(char c);
@@ -99,7 +100,7 @@ enum e_tokentype	is_operator(char *str);
 enum e_builtin		is_builtin(char *str);
 
 char				*get_env(char *str, t_list *envp);
-void				update_env(t_list *envp, char *key, char *value);
+int					update_env(t_list *envp, char *key, char *value);
 size_t				getenv_skip(char *str);
 
 int					check_token(t_token *lst);
@@ -112,7 +113,7 @@ void				token_clear(t_token **lst, void (*del)(void *));
 int					ft_echo(char **cmd);
 int					ft_env(t_list *envp);
 int					ft_pwd(char **cmd);
-int					ft_exit(char **cmd);
+int					ft_exit(char **cmd, t_data *data);
 int					ft_cd(char **cmd, t_list *envp);
 int					ft_export(char **cmd, t_list *envp);
 int					ft_unset(char **cmd, t_list *envp);
@@ -124,10 +125,8 @@ size_t				get_cmd_size(t_token *tokens);
 char				*get_cmd_path(char *cmd, t_list *envp_lst);
 char				**env_lst_to_str(t_list *envp_lst);
 
-void				commands_fill(t_token *tokens,
-						t_list *envp_lst, char ****cmd);
-void				commands_execute(char ***cmd,
-						t_token *tokens, t_list *envp_lst);
+int					commands_fill(t_data data);
+void				commands_execute(t_data *data);
 void				commands_clear(char ****cmd);
 
 void				ft_close(int fd);
@@ -136,18 +135,18 @@ void				close_fds_redir(t_redir redir);
 int					handle_error(char *str, int error_code);
 
 void				wait_process(int pid);
-void				exec_bin(char **cmd, char **envp,
+void				exec_bin(char **cmd, t_data *data,
 						t_redir redir, pid_t *pid);
-void				exec_builtin(char **args, t_list *envp_lst,
+void				exec_builtin(char **args, t_data *data,
 						t_redir redir, pid_t *pid);
 
-void				redirection_init(char ***envp,
-						t_list *envp_lst, t_redir *redir);
-void				redirection_end(char ***envp, t_redir redir, int pid);
-int					redirection_in(t_redir *redir, t_token *tokens);
-int					redirection_pipe(t_redir *redir);
-int					redirection_out(t_redir *redir, t_token *tokens);
+int					redir_init(t_redir *redir, t_data *data);
+void				redir_end(t_redir redir, int pid);
+int					redir_in(t_redir *redir, t_token *tokens);
+int					redir_pipe(t_redir *redir);
+int					redir_out(t_redir *redir, t_token *tokens);
 
 int					heredoc(char *limiter);
+void				secure_exit(t_data **data, int error_code);
 
 #endif

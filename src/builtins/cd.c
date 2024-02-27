@@ -22,12 +22,12 @@
 void	cd_error(char *path, char *str)
 {
 	ft_putstr_fd("cd: ", 2);
-	if (!path)
-	{
+	if (!path && !str)
+		ft_putstr_fd("Malloc error\n", 2);
+	else if (!path)
 		ft_putstr_fd(str, 2);
-		return ;
-	}
-	perror(path);
+	else
+		perror(path);
 }
 
 /*
@@ -61,7 +61,8 @@ int	ft_cd(char **cmd, t_list *envp)
 
 	if (!cd_check(cmd))
 		return (1);
-	update_env(envp, "OLDPWD", getcwd(path, 4096));
+	if (update_env(envp, "OLDPWD", getcwd(path, 4096)))
+		return (cd_error(NULL, NULL), 1);
 	if (!cmd[1])
 	{
 		home = get_env("HOME", envp);
@@ -77,6 +78,7 @@ int	ft_cd(char **cmd, t_list *envp)
 		if (errno != 0)
 			return (cd_error(cmd[1], NULL), 1);
 	}
-	update_env(envp, "PWD", getcwd(path, 4096));
+	if (update_env(envp, "PWD", getcwd(path, 4096)))
+		return (cd_error(NULL, NULL), 1);
 	return (0);
 }

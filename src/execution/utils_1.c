@@ -15,10 +15,17 @@
 size_t	get_cmd_nbr(t_token *tokens)
 {
 	size_t	i;
+	bool	trigger;
 
-	i = 1;
+	i = 0;
+	trigger = false;
 	while (tokens)
 	{
+		if (tokens->type == WORD && !trigger)
+		{
+			i++;
+			trigger = true;
+		}
 		if (tokens->type == PIPE)
 			i++;
 		tokens = tokens->next;

@@ -12,14 +12,18 @@
 
 #include "../../inc/minishell.h"
 
-void	redirection_init(char ***envp, t_list *envp_lst, t_redir *redir)
+int	redir_init(t_redir *redir, t_data *data)
 {
-	*envp = env_lst_to_str(envp_lst);
+	redir->fdin = -1;
+	redir->fdout = -1;
 	(*redir).tmp_fdin = dup(STDIN_FILENO);
 	(*redir).tmp_fdout = dup(STDOUT_FILENO);
+	if (redir_in(redir, data->tokens) || redir_out(redir, data->tokens))
+		return (1);
+	return (0);
 }
 
-void	redirection_end(char ***envp, t_redir redir, int pid)
+void	redir_end(t_redir redir, int pid)
 {
 	dup2(redir.tmp_fdin, STDIN_FILENO);
 	dup2(redir.tmp_fdout, STDOUT_FILENO);
@@ -27,11 +31,11 @@ void	redirection_end(char ***envp, t_redir redir, int pid)
 	ft_close(redir.fdout);
 	ft_close(redir.tmp_fdin);
 	ft_close(redir.tmp_fdout);
-	ft_free(*envp);
+	unlink(".here_doc");
 	wait_process(pid);
 }
 
-int	redirection_in(t_redir *redir, t_token *tokens)
+int	redir_in(t_redir *redir, t_token *tokens)
 {
 	int		fd;
 	bool	trigger;
@@ -60,7 +64,7 @@ int	redirection_in(t_redir *redir, t_token *tokens)
 	return (0);
 }
 
-int	redirection_pipe(t_redir *redir)
+int	redir_pipe(t_redir *redir)
 {
 	int	fd[2];
 
@@ -71,7 +75,7 @@ int	redirection_pipe(t_redir *redir)
 	return (0);
 }
 
-int	redirection_out(t_redir *redir, t_token *tokens)
+int	redir_out(t_redir *redir, t_token *tokens)
 {
 	int		fd;
 	bool	trigger;
