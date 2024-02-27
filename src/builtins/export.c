@@ -55,6 +55,7 @@ int	export_print(t_list *envp)
 int	export_check(char *cmd, t_list *envp, t_list **current)
 {
 	size_t	i;
+	char	*name;
 
 	i = 0;
 	*current = envp;
@@ -67,13 +68,14 @@ int	export_check(char *cmd, t_list *envp, t_list **current)
 	}
 	if (!cmd[i] || i == 0)
 		return (-1);
+	name = ft_substr(cmd, 0, i);
 	while (*current)
 	{
-		if (is_env((*current)->content, cmd))
-			return (1);
+		if (is_env((*current)->content, name))
+			return (free(name), 1);
 		*current = (*current)->next;
 	}
-	return (2);
+	return (free(name), 2);
 }
 
 /*
@@ -104,7 +106,7 @@ int	ft_export(char **cmd, t_list *envp)
 		else if (check == 1)
 		{
 			free(target->content);
-			target->content = cmd[i];
+			target->content = ft_strdup(cmd[i]);
 		}
 		else if (check == 2)
 			ft_lstadd_back(&envp, ft_lstnew(ft_strdup(cmd[i])));

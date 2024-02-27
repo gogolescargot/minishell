@@ -29,7 +29,7 @@ LIBFT	=	$(LIBFT_DIR)libft.a
 FILE_C	=	minishell signal \
 			lexer/lexer lexer/token lexer/utils_1 lexer/utils_2 \
 			expander/expander expander/env expander/utils \
-			execution/execution execution/commands execution/redir execution/path execution/utils execution/heredoc \
+			execution/execution execution/commands execution/redir execution/utils_1 execution/utils_2 \
 			builtins/echo builtins/cd builtins/pwd builtins/export builtins/unset builtins/env builtins/exit builtins/utils \
 
 FILE_H	=	minishell

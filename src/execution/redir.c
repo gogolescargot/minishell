@@ -19,13 +19,16 @@ void	redirection_init(char ***envp, t_list *envp_lst, t_redir *redir)
 	(*redir).tmp_fdout = dup(STDOUT_FILENO);
 }
 
-void	redirection_end(char ***envp, t_redir redir)
+void	redirection_end(char ***envp, t_redir redir, int pid)
 {
 	dup2(redir.tmp_fdin, STDIN_FILENO);
 	dup2(redir.tmp_fdout, STDOUT_FILENO);
+	ft_close(redir.fdin);
+	ft_close(redir.fdout);
 	ft_close(redir.tmp_fdin);
 	ft_close(redir.tmp_fdout);
 	ft_free(*envp);
+	wait_process(pid);
 }
 
 int	redirection_in(t_redir *redir, t_token *tokens)

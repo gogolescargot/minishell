@@ -41,7 +41,7 @@ bool	cd_check(char **cmd)
 {
 	if (!cmd)
 		return (false);
-	if (cmd[2])
+	if (cmd[1] && cmd[2])
 		return (cd_error(NULL, "Too many arguments\n"), false);
 	return (true);
 }

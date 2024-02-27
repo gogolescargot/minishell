@@ -35,21 +35,26 @@ t_list	*init_envp(char **envp)
 	return (envp_lst);
 }
 
+t_list	*init_minishell(int argc, char **argv, char **envp)
+{
+	ignore_args(argc, argv);
+	signal(SIGINT, signal_handler);
+	signal(SIGQUIT, SIG_IGN);
+	return (init_envp(envp));
+}
+
 int	main(int argc, char **argv, char **envp)
 {
 	char	*line;
 	t_token	*lst;
 	t_list	*envp_lst;
 
-	ignore_args(argc, argv);
-	envp_lst = init_envp(envp);
-	signal(SIGINT, signal_handler);
-	signal(SIGQUIT, SIG_IGN);
+	envp_lst = init_minishell(argc, argv, envp);
 	while (1)
 	{
 		line = readline("minishell > ");
 		if (!line)
-			signal_handler(0);
+			break ;
 		else
 		{
 			add_history(line);
@@ -63,4 +68,5 @@ int	main(int argc, char **argv, char **envp)
 		}
 	}
 	ft_lstclear(&envp_lst, ft_free);
+	signal_handler(0);
 }

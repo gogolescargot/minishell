@@ -33,13 +33,12 @@ void	commands_execute(char ***cmd, t_token *tokens, t_list *envp_lst)
 		dup2(redir.fdout, STDOUT_FILENO);
 		ft_close(redir.fdout);
 		if (is_builtin(*(cmd)[0]) != BUILTIN_NONE)
-			exec_builtin(*cmd, envp_lst, is_builtin(*(cmd)[0]));
+			exec_builtin(*cmd, envp_lst, redir, &pid);
 		else
 			exec_bin(*cmd, envp, redir, &pid);
 		cmd++;
 	}
-	redirection_end(&envp, redir);
-	wait_process(pid);
+	redirection_end(&envp, redir, pid);
 }
 
 void	command_fill(t_token **tokens, char ***cmd, t_list *envp_lst)

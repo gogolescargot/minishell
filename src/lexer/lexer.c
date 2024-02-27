@@ -73,6 +73,12 @@ void	print_error(int code)
 		printf("Malloc error\n");
 }
 
+void	lexer_error(t_token *lst)
+{
+	print_error(check_token(lst));
+	g_exit_code = 1;
+}
+
 /*
  * Lexical analyzer
  *
@@ -102,8 +108,7 @@ t_token	*lexer(char *str)
 	}
 	if (check_token(lst) != 0)
 	{
-		print_error(check_token(lst));
-		g_exit_code = 1;
+		lexer_error(lst);
 		token_clear(&lst, ft_free);
 		return (NULL);
 	}

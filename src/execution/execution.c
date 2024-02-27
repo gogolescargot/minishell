@@ -12,22 +12,51 @@
 
 #include "../../inc/minishell.h"
 
-void	exec_builtin(char **args, t_list *envp_lst, enum e_builtin type)
+void	exec_builtin(char **args, t_list *envp_lst,
+	t_redir redir, pid_t *pid)
+{
+	enum e_builtin	type;
+
+	type = is_builtin(args[0]);
+	*pid = fork();
+	if (*pid == 0)
+	{
+		close_fds_redir(redir);
+		if (type == ECHO)
+			g_exit_code = ft_echo(args);
+		else if (type == CD)
+			g_exit_code = ft_cd(args, envp_lst);
+		else if (type == PWD)
+			g_exit_code = ft_pwd(args);
+		else if (type == EXPORT)
+			g_exit_code = ft_export(args, envp_lst);
+		else if (type == UNSET)
+			g_exit_code = ft_unset(args, envp_lst);
+		else if (type == ENV)
+			g_exit_code = ft_env(envp_lst);
+		else if (type == EXIT)
+			g_exit_code = ft_exit(args);
+		exit(g_exit_code);
+	}
+}
+
+void	builtin_execute(char **cmd, t_list *envp_lst,
+	enum e_builtin type)
 {
 	if (type == ECHO)
-		g_exit_code = ft_echo(args);
+		g_exit_code = ft_echo(cmd);
 	else if (type == CD)
-		g_exit_code = ft_cd(args, envp_lst);
+		g_exit_code = ft_cd(cmd, envp_lst);
 	else if (type == PWD)
-		g_exit_code = ft_pwd();
+		g_exit_code = ft_pwd(cmd);
 	else if (type == EXPORT)
-		g_exit_code = ft_export(args, envp_lst);
+		g_exit_code = ft_export(cmd, envp_lst);
 	else if (type == UNSET)
-		g_exit_code = ft_unset(args, envp_lst);
+		g_exit_code = ft_unset(cmd, envp_lst);
 	else if (type == ENV)
 		g_exit_code = ft_env(envp_lst);
 	else if (type == EXIT)
-		g_exit_code = ft_exit(args);
+		g_exit_code = ft_exit(cmd);
 }
 
 void	exec_bin(char **cmd, char **envp, t_redir redir, pid_t *pid)
@@ -35,10 +64,7 @@ void	exec_bin(char **cmd, char **envp, t_redir redir, pid_t *pid)
 	*pid = fork();
 	if (*pid == 0)
 	{
-		ft_close(redir.tmp_fdin);
-		ft_close(redir.tmp_fdout);
-		ft_close(redir.fdin);
-		ft_close(redir.fdout);
+		close_fds_redir(redir);
 		execve(cmd[0], cmd, envp);
 		perror(cmd[0]);
 		exit(1);
@@ -79,6 +105,9 @@ void	execution(t_token *tokens, t_list *envp_lst)
 		return ;
 	cmd = ft_calloc(get_cmd_nbr(tokens) + 1, sizeof(char **));
 	commands_fill(tokens, envp_lst, &cmd);
-	commands_execute(cmd, tokens, envp_lst);
+	if (get_cmd_nbr(tokens) == 1 && is_builtin(cmd[0][0]) != BUILTIN_NONE)
+		builtin_execute(cmd[0], envp_lst, is_builtin(cmd[0][0]));
+	else
+		commands_execute(cmd, tokens, envp_lst);
 	commands_clear(&cmd);
 }

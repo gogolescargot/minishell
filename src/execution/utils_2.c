@@ -1,7 +1,7 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   path.c                                             :+:      :+:    :+:   */
+/*   utils_2.c                                          :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: ggalon <ggalon@student.42lyon.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
@@ -64,4 +64,38 @@ char	*get_cmd_path(char *cmd, t_list *envp_lst)
 	}
 	ft_arrayclear(all_path);
 	return (ft_strdup(cmd));
+}
+
+int	heredoc(char *limiter)
+{
+	char	*line;
+	int		fd;
+
+	fd = open(".here_doc", O_WRONLY | O_CREAT | O_TRUNC, 0644);
+	if (fd < 0)
+		return (-1);
+	while (1)
+	{
+		line = readline("> ");
+		if (!line || !ft_strncmp(line, limiter, ft_strlen(limiter) + 1))
+		{
+			ft_close(fd);
+			fd = open(".here_doc", O_RDONLY);
+			free(line);
+			return (fd);
+		}
+		ft_putendl_fd(line, fd);
+		free(line);
+	}
+	ft_close_unlink(fd, ".here_doc");
+	return (-1);
+}
+
+void	close_fds_redir(t_redir redir)
+{
+	ft_close(redir.tmp_fdin);
+	ft_close(redir.tmp_fdout);
+	ft_close(redir.file_fdout);
+	ft_close(redir.fdin);
+	ft_close(redir.fdout);
 }
