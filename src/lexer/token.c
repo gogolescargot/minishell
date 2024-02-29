@@ -12,7 +12,7 @@
 
 #include "../../inc/minishell.h"
 
-t_token	*new_token(enum e_tokentype type, char *content)
+t_token	*token_new(enum e_tokentype type, char *content)
 {
 	t_token	*head;
 
@@ -26,7 +26,7 @@ t_token	*new_token(enum e_tokentype type, char *content)
 	return (head);
 }
 
-t_token	*last_token(t_token *lst)
+t_token	*token_last(t_token *lst)
 {
 	if (!lst)
 		return (NULL);
@@ -35,7 +35,7 @@ t_token	*last_token(t_token *lst)
 	return (lst);
 }
 
-void	addback_token(t_token **lst, enum e_tokentype type, char *content)
+void	token_addback(t_token **lst, t_token *token)
 {
 	t_token	*last;
 
@@ -43,10 +43,26 @@ void	addback_token(t_token **lst, enum e_tokentype type, char *content)
 		return ;
 	if (!*lst)
 	{
-		*lst = new_token(type, content);
+		*lst = token;
 		return ;
 	}
-	last = last_token(*lst);
-	last->next = new_token(type, content);
+	last = token_last(*lst);
+	last->next = token;
 	last->next->prev = last;
+}
+
+void	token_clear(t_token **lst, void (*del)(void *))
+{
+	t_token	*temp;
+
+	if (!(*lst) || !del)
+		return ;
+	while (*lst)
+	{
+		temp = (*lst)->next;
+		del((*lst)->content);
+		ft_free(*lst);
+		*lst = NULL;
+		(*lst) = temp;
+	}
 }

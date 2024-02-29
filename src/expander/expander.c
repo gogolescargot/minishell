@@ -41,18 +41,21 @@ void	expand_content_def(t_expand *expand)
  * the current index of the environment variable in the original string
  * @param j A size_t containing
  * the current index of the environment variable in the updated string
- * @param envp A linked list that contain the environement variables
+ * @param envp_lst A linked list that contain the environement variables
  */
 
-void	expand_content_env(t_expand *expand, t_list *envp)
+int	expand_content_env(t_expand *expand, t_data *data)
 {
-	if (get_env(expand->old + expand->i + 1, envp))
-	{
-		ft_strlcat(expand->new, get_env(expand->old + expand->i + 1, envp),
-			content_len(expand->old, envp) + 1);
-		expand->j += ft_strlen(get_env(expand->old + expand->i + 1, envp));
-	}
+	char	*env;
+
+	env = get_env(expand->old + expand->i + 1, data->envp_lst);
+	if (!env)
+		return (1);
+	ft_strlcat(expand->new, env, content_len(expand->old, data) + 1);
+	expand->j += ft_strlen(env);
 	expand->i += getenv_skip(expand->old + expand->i + 1) + 1;
+	free(env);
+	return (0);
 }
 
 /*
@@ -60,26 +63,29 @@ void	expand_content_env(t_expand *expand, t_list *envp)
  * and environment variables expanded
  *
  * @param str A string to update
- * @param envp A linked list that contain the environement variables
+ * @param envp_lst A linked list that contain the environement variables
  * @return A pointer to the new updated string
  */
 
-char	*expand_content(char *str, t_list *envp)
+char	*expand_content(char *str, t_data *data)
 {
 	t_expand	expand;
 
 	expand.i = 0;
 	expand.j = 0;
-	expand.old = str;
-	expand.new = ft_calloc(content_len(str, envp) + 1, sizeof(char));
 	expand.quoted = 0;
+	expand.old = str;
+	expand.new = ft_calloc(content_len(str, data) + 1, sizeof(char));
 	if (!expand.new)
 		return (NULL);
 	while (expand.old[expand.i])
 	{
 		is_quoted(str[expand.i], &expand.quoted);
 		if (expand.old[expand.i] == '$' && expand.quoted < 2)
-			expand_content_env(&expand, envp);
+		{
+			if (expand_content_env(&expand, data))
+				return (free(expand.new), NULL);
+		}
 		else if (is_interpreted_quote(str[expand.i], expand.quoted))
 			expand.i++;
 		else
@@ -96,21 +102,22 @@ char	*expand_content(char *str, t_list *envp)
  * @return A pointer to the beginning of the LST linked list
  */
 
-t_token	*expander(t_token *lst, t_list *envp)
+void	expander(t_data *data)
 {
 	char	*temp;
 	t_token	*current;
 
-	current = lst;
+	current = data->tokens;
 	while (current)
 	{
 		if (current->content != NULL)
 		{
 			temp = current->content;
-			current->content = expand_content(current->content, envp);
+			current->content = expand_content(current->content, data);
 			free(temp);
+			if (!current->content)
+				secure_exit(&data, 1);
 		}
 		current = current->next;
 	}
-	return (lst);
 }

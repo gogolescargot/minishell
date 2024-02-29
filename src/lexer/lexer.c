@@ -28,7 +28,7 @@ char	*tokenizer(char *str, size_t *spc)
 	quoted = 0;
 	while (str[*spc] && is_space(str[*spc]))
 		(*spc)++;
-	while (str[*spc] && !(((is_operator(str + *spc) != NONE
+	while (str[*spc] && !(((is_operator(str + *spc) != TOKEN_NONE
 					&& is_operator(str + *spc) != WORD)
 				|| is_space(str[*spc])) && !quoted))
 	{
@@ -37,40 +37,48 @@ char	*tokenizer(char *str, size_t *spc)
 		(*spc)++;
 	}
 	if (!len)
-		return (NULL);
+		return (ft_strdup(""));
 	return (ft_substr(str, *spc - len, len));
-}
-
-void	print_token(t_token *lst)
-{
-	while (lst)
-	{
-		if (lst->type == WORD || lst->type == Q_WORD)
-			printf("Word :%s\n", lst->content);
-		if (lst->type == I_FILE)
-			printf("Input :%s\n", lst->content);
-		if (lst->type == O_FILE_APPEND)
-			printf("Append :%s\n", lst->content);
-		if (lst->type == O_FILE_TRUNC)
-			printf("Trunc :%s\n", lst->content);
-		if (lst->type == HEREDOC)
-			printf("Heredoc :%s\n", lst->content);
-		if (lst->type == PIPE)
-			printf("Pipe :%s\n", lst->content);
-		lst = lst->next;
-	}
 }
 
 void	print_error(int code)
 {
 	if (code == 1)
-		printf("Missing Pipe Argument or quotes\n");
+		printf("Missing Pipe Argument\n");
 	else if (code == 2)
 		printf("Missing argument or quote\n");
 	else if (code == 3)
 		printf("Token error\n");
 	else if (code == -1)
 		printf("Malloc error\n");
+}
+
+void	lexer_error(t_data *data)
+{
+	if (check_token(data->tokens) != 0)
+	{
+		print_error(check_token(data->tokens));
+		g_exit_code = 1;
+		token_clear(&data->tokens, ft_free);
+		data->tokens = NULL;
+	}
+}
+
+t_token	*lexer_utils(t_data *data, enum e_tokentype type, size_t *i)
+{
+	t_token	*token;
+	char	*word;
+
+	if (type == PIPE)
+		token = token_new(type, NULL);
+	else
+	{
+		word = tokenizer(data->line, i);
+		if (!word)
+			secure_exit(&data, 1);
+		token = token_new(type, word);
+	}
+	return (token);
 }
 
 /*
@@ -80,28 +88,27 @@ void	print_error(int code)
  * @return A linked list of all the splited tokens in the string
  */
 
-t_token	*lexer(char *str)
+void	lexer(t_data *data)
 {
 	size_t				i;
-	t_token				*lst;
+	t_token				*token;
 	enum e_tokentype	type;
 
 	i = 0;
-	lst = NULL;
-	while (str[i])
+	while (data->line[i])
 	{
-		type = is_operator(str + i);
+		type = is_operator(data->line + i);
 		if (type == O_FILE_APPEND || type == HEREDOC)
 			i += 2;
 		else if (type != WORD)
 			i += 1;
-		if (type == PIPE)
-			addback_token(&lst, type, NULL);
-		else if (type != NONE)
-			addback_token(&lst, type, tokenizer(str, &i));
+		if (type != TOKEN_NONE)
+		{
+			token = lexer_utils(data, type, &i);
+			if (!token)
+				secure_exit(&data, 1);
+			token_addback(&data->tokens, token);
+		}
 	}
-	if (check_token(lst) != 0)
-		print_error(check_token(lst));
-	print_token(lst);
-	return (lst);
+	lexer_error(data);
 }

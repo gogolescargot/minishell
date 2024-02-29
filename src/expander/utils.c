@@ -26,6 +26,17 @@ bool	is_interpreted_quote(char c, int quoted)
 		|| (c == '\"' && (quoted == 1 || quoted == 0)));
 }
 
+void	content_len_utils(char *str, t_data *data, size_t *i, size_t *len)
+{
+	char	*env;
+
+	env = get_env(str + *i + 1, data->envp_lst);
+	if (!env)
+		secure_exit(&data, 1);
+	*len += ft_strlen(env);
+	free(env);
+	*i += getenv_skip(str + *i + 1) + 1;
+}
 /*
  * Calculate the size of the new content
  *
@@ -34,7 +45,7 @@ bool	is_interpreted_quote(char c, int quoted)
  * @return A calculated new lengh
  */
 
-size_t	content_len(char *str, t_list *envp)
+size_t	content_len(char *str, t_data *data)
 {
 	size_t	i;
 	size_t	len;
@@ -48,14 +59,12 @@ size_t	content_len(char *str, t_list *envp)
 		is_quoted(str[i], &quoted);
 		if (str[i] == '$' && quoted < 2)
 		{
-			len += ft_strlen(get_env(str + i + 1, envp));
-			i += getenv_skip(str + i + 1) + 1;
+			content_len_utils(str, data, &i, &len);
 		}
-		else if (is_interpreted_quote(str[i], quoted))
-			i++;
 		else
 		{
-			len++;
+			if (!is_interpreted_quote(str[i], quoted))
+				len++;
 			i++;
 		}
 	}

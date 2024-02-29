@@ -19,23 +19,25 @@
  * @return True if the string is a builtin function, otherwise False
  */
 
-bool	is_builtin(char *str)
+enum e_builtin	is_builtin(char *str)
 {
+	if (!str)
+		return (BUILTIN_NONE);
 	if (!ft_strncmp(str, "echo", 5))
-		return (true);
+		return (ECHO);
 	else if (!ft_strncmp(str, "cd", 3))
-		return (true);
+		return (CD);
 	else if (!ft_strncmp(str, "pwd", 4))
-		return (true);
+		return (PWD);
 	else if (!ft_strncmp(str, "export", 7))
-		return (true);
+		return (EXPORT);
 	else if (!ft_strncmp(str, "unset", 6))
-		return (true);
+		return (UNSET);
 	else if (!ft_strncmp(str, "env", 4))
-		return (true);
+		return (ENV);
 	else if (!ft_strncmp(str, "exit", 5))
-		return (true);
-	return (false);
+		return (EXIT);
+	return (BUILTIN_NONE);
 }
 
 /*
@@ -64,7 +66,7 @@ bool	is_env(char *s1, char *s2)
  * @return 0 if the key is successfully updated, otherwise 1
  */
 
-void	update_env(t_list *envp, char *key, char *value)
+int	update_env(t_list *envp, char *key, char *value)
 {
 	size_t		len;
 	char		*str;
@@ -72,7 +74,7 @@ void	update_env(t_list *envp, char *key, char *value)
 	len = ft_strlen(key);
 	str = ft_calloc(len + ft_strlen(value) + 2, sizeof(char));
 	if (!str)
-		return ;
+		return (1);
 	ft_strlcpy(str, key, len + 1);
 	str[len] = '=';
 	ft_strlcpy(str + len + 1, value, ft_strlen(value) + 1);
@@ -83,7 +85,8 @@ void	update_env(t_list *envp, char *key, char *value)
 		envp = envp->next;
 	}
 	if (!envp)
-		return ;
-	free(envp->content);
+		return (0);
+	ft_free(envp->content);
 	envp->content = str;
+	return (0);
 }

@@ -18,17 +18,17 @@
  * @param str An error message
  */
 
-void	exit_error(char *str)
+void	exit_error(char *str, t_data *data)
 {
 	ft_putstr_fd("exit: ", 2);
 	if (str)
 	{
 		ft_putstr_fd(str, 2);
 		ft_putstr_fd(": Numeric argument required\n", 2);
-		return ;
 	}
-	ft_putstr_fd("Too many arguments\n", 2);
-	exit(2);
+	else
+		ft_putstr_fd("Too many arguments\n", 2);
+	secure_exit(&data, 2);
 }
 
 /*
@@ -73,7 +73,7 @@ bool	exit_check(char *nptr, size_t *r)
  * @return 0 on success, 1 in case of error
  */
 
-int	ft_exit(char **cmd)
+int	ft_exit(char **cmd, t_data *data)
 {
 	size_t	exit_code;
 	bool	check;
@@ -82,14 +82,14 @@ int	ft_exit(char **cmd)
 		return (1);
 	printf("exit\n");
 	if (!cmd[1])
-		exit(g_exit_code);
+		secure_exit(&data, g_exit_code);
 	exit_code = 0;
 	check = exit_check(cmd[1], &exit_code);
 	if (!check)
-		exit_error(cmd[1]);
+		exit_error(cmd[1], data);
 	else if (check && cmd[2])
-		exit_error(NULL);
+		exit_error(NULL, data);
 	else if (check)
-		exit(exit_code);
+		secure_exit(&data, exit_code);
 	return (1);
 }

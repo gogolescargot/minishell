@@ -26,7 +26,7 @@ bool	check_word(char *str)
 
 	quoted = 0;
 	i = 0;
-	if (!str)
+	if (!str || !str[0])
 		return (false);
 	while (str[i])
 	{
@@ -80,15 +80,15 @@ bool	check_pipe(t_token *lst)
 int	check_token(t_token *lst)
 {
 	if (!lst)
-		return (-1);
+		return (0);
 	while (lst)
 	{
 		if (lst->type == PIPE && !check_pipe(lst))
 			return (1);
-		else if (lst->type != NONE
+		else if (lst->type != TOKEN_NONE
 			&& lst->type != PIPE && !check_word(lst->content))
 			return (2);
-		else if (lst->type == NONE)
+		else if (lst->type == TOKEN_NONE)
 			return (3);
 		lst = lst->next;
 	}

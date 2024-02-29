@@ -20,9 +20,16 @@
 
 void	export_error(char *str)
 {
-	ft_putstr_fd("export: `", 2);
-	ft_putstr_fd(str, 2);
-	ft_putstr_fd("': Not a valid identifier\n", 2);
+	if (!str)
+	{
+		ft_putstr_fd("export: Malloc error\n", 2);
+	}
+	else
+	{
+		ft_putstr_fd("export: `", 2);
+		ft_putstr_fd(str, 2);
+		ft_putstr_fd("': Not a valid identifier\n", 2);
+	}
 }
 
 /*
@@ -55,6 +62,7 @@ int	export_print(t_list *envp)
 int	export_check(char *cmd, t_list *envp, t_list **current)
 {
 	size_t	i;
+	char	*name;
 
 	i = 0;
 	*current = envp;
@@ -67,13 +75,22 @@ int	export_check(char *cmd, t_list *envp, t_list **current)
 	}
 	if (!cmd[i] || i == 0)
 		return (-1);
+	name = ft_substr(cmd, 0, i);
+	if (!name)
+		return (-2);
 	while (*current)
 	{
-		if (is_env((*current)->content, cmd))
-			return (1);
+		if (is_env((*current)->content, name))
+			return (free(name), 1);
 		*current = (*current)->next;
 	}
-	return (2);
+	return (free(name), 2);
+}
+
+void	export_replace(char **cmd, t_list *target, size_t i)
+{
+	free(target->content);
+	target->content = ft_strdup(cmd[i]);
 }
 
 /*
@@ -99,13 +116,12 @@ int	ft_export(char **cmd, t_list *envp)
 	{
 		target = NULL;
 		check = export_check(cmd[i], envp, &target);
-		if (check == -1)
+		if (check == -2)
+			return (export_error(NULL), 1);
+		else if (check == -1)
 			return (export_error(cmd[i]), 1);
 		else if (check == 1)
-		{
-			free(target->content);
-			target->content = cmd[i];
-		}
+			export_replace(cmd, target, i);
 		else if (check == 2)
 			ft_lstadd_back(&envp, ft_lstnew(ft_strdup(cmd[i])));
 		i++;

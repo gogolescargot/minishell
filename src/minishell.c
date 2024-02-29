@@ -14,55 +14,81 @@
 
 int	g_exit_code = 0;
 
-void	ignore_args(int argc, char **argv)
+void	secure_exit(t_data **data, int error_code)
 {
-	(void)argc;
-	(void)argv;
+	ft_free((*data)->line);
+	ft_lstclear(&(*data)->envp_lst, ft_free);
+	token_clear(&(*data)->tokens, ft_free);
+	commands_clear(&(*data)->cmd);
+	unlink(".here_doc");
+	free(*data);
+	exit(error_code);
 }
 
 t_list	*init_envp(char **envp)
 {
 	size_t	i;
 	t_list	*envp_lst;
+	t_list	*node;
 
 	i = 0;
 	envp_lst = NULL;
 	while (envp[i])
 	{
-		ft_lstadd_back(&envp_lst, ft_lstnew(ft_strdup(envp[i])));
+		node = ft_lstnew(ft_strdup(envp[i]));
+		if (!node)
+			return (ft_lstclear(&envp_lst, ft_free), NULL);
+		ft_lstadd_back(&envp_lst, node);
 		i++;
 	}
 	return (envp_lst);
 }
 
-int	main(int argc, char **argv, char **envp)
+t_data	*init_minishell(int argc, char **argv, char **envp)
 {
-	char	*line;
-	t_token	*lst;
-	t_list	*envp_lst;
+	t_data	*data;
 
-	ignore_args(argc, argv);
-	envp_lst = init_envp(envp);
+	data = malloc(sizeof(t_data));
+	if (!data)
+		return (NULL);
+	data->envp = envp;
+	data->envp_lst = init_envp(envp);
+	if (!data->envp_lst)
+		return (NULL);
+	data->tokens = NULL;
+	data->cmd = NULL;
+	(void)argc;
+	(void)argv;
 	signal(SIGINT, signal_handler);
 	signal(SIGQUIT, SIG_IGN);
+	return (data);
+}
+
+int	main(int argc, char **argv, char **envp)
+{
+	t_data	*data;
+
+	data = init_minishell(argc, argv, envp);
+	if (!data)
+		return (1);
 	while (1)
 	{
-		line = readline("minishell > ");
-		if (!line)
-			signal_handler(0);
+		data->line = readline("minishell > ");
+		if (!data->line)
+			break ;
 		else
 		{
-			add_history(line);
-			lst = lexer(line);
-			expander(lst, envp_lst);
-			while (lst)
-			{
-				if (lst->content)
-					printf("%s\n", lst->content);
-				lst = lst->next;
-			}
-			free(line);
+			add_history(data->line);
+			lexer(data);
+			if (!data->tokens)
+				continue ;
+			expander(data);
+			execution(data);
+			ft_free(data->line);
+			token_clear(&data->tokens, ft_free);
 		}
 	}
-	ft_lstclear(&envp_lst, ft_free);
+	ft_lstclear(&data->envp_lst, ft_free);
+	printf("exit\n");
+	secure_exit(&data, g_exit_code);
 }

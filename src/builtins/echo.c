@@ -19,6 +19,23 @@
  * @return 0 on success, 1 in case of error
  */
 
+bool	check_param(char *str)
+{
+	size_t	i;
+
+	i = 0;
+	if (str[i] == '-')
+	{
+		i++;
+		while (str[i] == 'n')
+			i++;
+		if (str[i])
+			return (false);
+		return (true);
+	}
+	return (false);
+}
+
 int	ft_echo(char **cmd)
 {
 	bool	nl;
@@ -28,7 +45,9 @@ int	ft_echo(char **cmd)
 	i = 1;
 	if (!cmd)
 		return (1);
-	if (!ft_strncmp(cmd[i], "-n", 3))
+	if (!cmd[i])
+		return (0);
+	if (check_param(cmd[i]))
 	{
 		nl = false;
 		i++;
