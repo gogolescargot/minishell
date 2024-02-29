@@ -25,22 +25,20 @@ void	secure_exit(t_data **data, int error_code)
 	exit(error_code);
 }
 
-void	ignore_args(int argc, char **argv)
-{
-	(void)argc;
-	(void)argv;
-}
-
 t_list	*init_envp(char **envp)
 {
 	size_t	i;
 	t_list	*envp_lst;
+	t_list	*node;
 
 	i = 0;
 	envp_lst = NULL;
 	while (envp[i])
 	{
-		ft_lstadd_back(&envp_lst, ft_lstnew(ft_strdup(envp[i])));
+		node = ft_lstnew(ft_strdup(envp[i]));
+		if (!node)
+			return (ft_lstclear(&envp_lst, ft_free), NULL);
+		ft_lstadd_back(&envp_lst, node);
 		i++;
 	}
 	return (envp_lst);
@@ -51,11 +49,16 @@ t_data	*init_minishell(int argc, char **argv, char **envp)
 	t_data	*data;
 
 	data = malloc(sizeof(t_data));
+	if (!data)
+		return (NULL);
 	data->envp = envp;
 	data->envp_lst = init_envp(envp);
+	if (!data->envp_lst)
+		return (NULL);
 	data->tokens = NULL;
 	data->cmd = NULL;
-	ignore_args(argc, argv);
+	(void)argc;
+	(void)argv;
 	signal(SIGINT, signal_handler);
 	signal(SIGQUIT, SIG_IGN);
 	return (data);
@@ -66,6 +69,8 @@ int	main(int argc, char **argv, char **envp)
 	t_data	*data;
 
 	data = init_minishell(argc, argv, envp);
+	if (!data)
+		return (1);
 	while (1)
 	{
 		data->line = readline("minishell > ");
@@ -74,7 +79,7 @@ int	main(int argc, char **argv, char **envp)
 		else
 		{
 			add_history(data->line);
-			data->tokens = lexer(data->line);
+			lexer(data);
 			if (!data->tokens)
 				continue ;
 			expander(data);

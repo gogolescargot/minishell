@@ -35,7 +35,7 @@ t_token	*token_last(t_token *lst)
 	return (lst);
 }
 
-void	token_addback(t_token **lst, enum e_tokentype type, char *content)
+void	token_addback(t_token **lst, t_token *token)
 {
 	t_token	*last;
 
@@ -43,11 +43,11 @@ void	token_addback(t_token **lst, enum e_tokentype type, char *content)
 		return ;
 	if (!*lst)
 	{
-		*lst = token_new(type, content);
+		*lst = token;
 		return ;
 	}
 	last = token_last(*lst);
-	last->next = token_new(type, content);
+	last->next = token;
 	last->next->prev = last;
 }
 

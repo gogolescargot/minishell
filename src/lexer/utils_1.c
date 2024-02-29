@@ -26,7 +26,7 @@ bool	check_word(char *str)
 
 	quoted = 0;
 	i = 0;
-	if (!str)
+	if (!str || !str[0])
 		return (false);
 	while (str[i])
 	{

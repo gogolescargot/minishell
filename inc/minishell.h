@@ -87,7 +87,7 @@ typedef struct s_data
 	char	*line;
 }	t_data;
 
-t_token				*lexer(char *str);
+void				lexer(t_data *data);
 void				expander(t_data *data);
 void				execution(t_data *data);
 
@@ -104,10 +104,10 @@ int					update_env(t_list *envp, char *key, char *value);
 size_t				getenv_skip(char *str);
 
 int					check_token(t_token *lst);
-size_t				content_len(char *str, t_list *envp);
+size_t				content_len(char *str, t_data *data);
 
-void				token_addback(t_token **lst,
-						enum e_tokentype type, char *content);
+t_token				*token_new(enum e_tokentype type, char *content);
+void				token_addback(t_token **lst, t_token *token);
 void				token_clear(t_token **lst, void (*del)(void *));
 
 int					ft_echo(char **cmd);

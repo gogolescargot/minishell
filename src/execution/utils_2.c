@@ -44,22 +44,22 @@ char	*get_cmd_path(char *cmd, t_list *envp_lst)
 	char	**all_path;
 	char	*path;
 	char	*exec;
+	char	*env;
 	int		i;
 
 	if (is_absolute_path(cmd))
 		return (ft_strdup(cmd));
 	i = -1;
-	all_path = ft_split(get_env("PATH", envp_lst), ':');
+	env = get_env("PATH", envp_lst);
+	all_path = ft_split(env, ':');
+	ft_free(env);
 	while (all_path && all_path[++i])
 	{
 		path = ft_strjoin(all_path[i], "/");
 		exec = ft_strjoin(path, cmd);
 		free(path);
 		if (access(exec, (F_OK | X_OK)) == 0)
-		{
-			ft_arrayclear(all_path);
-			return (exec);
-		}
+			return (ft_arrayclear(all_path), exec);
 		free(exec);
 	}
 	ft_arrayclear(all_path);
