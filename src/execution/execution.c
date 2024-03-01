@@ -43,6 +43,15 @@ void	exec_builtin(char **args, t_data *data,
 void	builtin_execute(char **cmd, t_data *data,
 	enum e_builtin type)
 {
+	t_redir	redir;
+
+	if (redir_init(&redir, data))
+		return ;
+	dup2(redir.fdin, STDIN_FILENO);
+	ft_close(redir.fdin);
+	redir.fdout = redir.file_fdout;
+	dup2(redir.fdout, STDOUT_FILENO);
+	ft_close(redir.fdout);
 	if (type == ECHO)
 		g_exit_code = ft_echo(cmd);
 	else if (type == CD)
@@ -57,6 +66,7 @@ void	builtin_execute(char **cmd, t_data *data,
 		g_exit_code = ft_env(data->envp_lst);
 	else if (type == EXIT)
 		g_exit_code = ft_exit(cmd, data);
+	redir_end(redir, -1);
 }
 
 void	exec_bin(char **cmd, t_data *data, t_redir redir, pid_t *pid)

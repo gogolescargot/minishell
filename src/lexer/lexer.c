@@ -44,13 +44,9 @@ char	*tokenizer(char *str, size_t *spc)
 void	print_error(int code)
 {
 	if (code == 1)
-		printf("Missing Pipe Argument\n");
+		ft_putstr_fd("Synthax error: Missing Pipe Argument\n", 2);
 	else if (code == 2)
-		printf("Missing argument or quote\n");
-	else if (code == 3)
-		printf("Token error\n");
-	else if (code == -1)
-		printf("Malloc error\n");
+		ft_putstr_fd("Synthax error: Missing argument or quote\n", 2);
 }
 
 void	lexer_error(t_data *data)

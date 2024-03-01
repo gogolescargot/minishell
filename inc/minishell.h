@@ -100,7 +100,7 @@ enum e_tokentype	is_operator(char *str);
 enum e_builtin		is_builtin(char *str);
 
 char				*get_env(char *str, t_list *envp);
-int					update_env(t_list *envp, char *key, char *value);
+bool				update_env(t_list *envp, char *key, char *value);
 size_t				getenv_skip(char *str);
 
 int					check_token(t_token *lst);

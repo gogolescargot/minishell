@@ -88,8 +88,6 @@ int	check_token(t_token *lst)
 		else if (lst->type != TOKEN_NONE
 			&& lst->type != PIPE && !check_word(lst->content))
 			return (2);
-		else if (lst->type == TOKEN_NONE)
-			return (3);
 		lst = lst->next;
 	}
 	return (0);
