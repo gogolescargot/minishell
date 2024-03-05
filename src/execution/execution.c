@@ -71,13 +71,16 @@ void	builtin_execute(char **cmd, t_data *data,
 
 void	exec_bin(char **cmd, t_data *data, t_redir redir, pid_t *pid)
 {
+	int	error_code;
+
 	*pid = fork();
 	if (*pid == 0)
 	{
 		close_fds_redir(redir);
 		execve(cmd[0], cmd, data->envp);
+		error_code = errno;
 		perror(cmd[0]);
-		secure_exit(&data, 1);
+		secure_exit(&data, error_code);
 	}
 }
 
