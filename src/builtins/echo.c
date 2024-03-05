@@ -19,11 +19,13 @@
  * @return 0 on success, 1 in case of error
  */
 
-bool	check_param(char *str)
+bool	echo_check(char *str)
 {
 	size_t	i;
 
 	i = 0;
+	if (!str)
+		return (false);
 	if (str[i] == '-')
 	{
 		i++;
@@ -36,6 +38,15 @@ bool	check_param(char *str)
 	return (false);
 }
 
+int	echo_null(bool nl)
+{
+	if (nl && printf("\n") == -1)
+		return (1);
+	else if (nl)
+		return (0);
+	return (0);
+}
+
 int	ft_echo(char **cmd)
 {
 	bool	nl;
@@ -45,13 +56,13 @@ int	ft_echo(char **cmd)
 	i = 1;
 	if (!cmd)
 		return (1);
-	if (!cmd[i])
-		return (0);
-	if (check_param(cmd[i]))
+	if (echo_check(cmd[i]))
 	{
 		nl = false;
 		i++;
 	}
+	if (!cmd[i])
+		return (echo_null(nl));
 	while (cmd[i])
 	{
 		if (printf("%s", cmd[i]) == -1)
