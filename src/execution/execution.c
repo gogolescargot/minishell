@@ -27,7 +27,7 @@ void	exec_builtin(char **args, t_data *data,
 		else if (type == CD)
 			g_exit_code = ft_cd(args, data->envp_lst);
 		else if (type == PWD)
-			g_exit_code = ft_pwd(args);
+			g_exit_code = ft_pwd();
 		else if (type == EXPORT)
 			g_exit_code = ft_export(args, data->envp_lst);
 		else if (type == UNSET)
@@ -57,7 +57,7 @@ void	builtin_execute(char **cmd, t_data *data,
 	else if (type == CD)
 		g_exit_code = ft_cd(cmd, data->envp_lst);
 	else if (type == PWD)
-		g_exit_code = ft_pwd(cmd);
+		g_exit_code = ft_pwd();
 	else if (type == EXPORT)
 		g_exit_code = ft_export(cmd, data->envp_lst);
 	else if (type == UNSET)

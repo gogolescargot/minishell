@@ -40,7 +40,7 @@ void	exit_error(char *str, t_data *data)
  * @return True if the argument is well right, otherwise return false
  */
 
-bool	exit_check(char *nptr, size_t *r)
+bool	exit_check(char *nptr, ssize_t *r)
 {
 	int		i;
 	int		m;
@@ -63,7 +63,7 @@ bool	exit_check(char *nptr, size_t *r)
 		i++;
 	if (nptr[i])
 		return (*r = 2, false);
-	return (true);
+	return (*r *= m, true);
 }
 
 /*
@@ -75,7 +75,7 @@ bool	exit_check(char *nptr, size_t *r)
 
 int	ft_exit(char **cmd, t_data *data)
 {
-	size_t	exit_code;
+	ssize_t	exit_code;
 	bool	check;
 
 	if (!cmd)
@@ -88,6 +88,8 @@ int	ft_exit(char **cmd, t_data *data)
 	if (!check)
 		exit_error(cmd[1], data);
 	else if (check && cmd[2])
+		ft_putstr_fd("exit: Too many arguments\n", 2);
+	else if (!check && cmd[2])
 		exit_error(NULL, data);
 	else if (check)
 		secure_exit(&data, exit_code);

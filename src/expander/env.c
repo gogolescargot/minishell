@@ -24,6 +24,8 @@ size_t	getenv_skip(char *str)
 	size_t	i;
 
 	i = 0;
+	if (str[i] == '?')
+		return (1);
 	while (str[i] && !is_space(str[i]) && !is_quote(str[i]) && str[i] != '$')
 		i++;
 	return (i);
@@ -67,7 +69,7 @@ char	*get_env(char *str, t_list *envp)
 		return (NULL);
 	if (!env_name[0])
 		return (ft_strdup("$"));
-	if (!ft_strncmp(env_name, "?", 2))
+	if (!ft_strncmp(env_name, "?", 1))
 		return (free(env_name), ft_itoa(g_exit_code));
 	while (envp)
 	{

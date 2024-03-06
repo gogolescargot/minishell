@@ -18,15 +18,10 @@
  * @return 0 on success, 1 in case of error
  */
 
-int	ft_pwd(char **cmd)
+int	ft_pwd(void)
 {
 	char	cwd[4096];
 
-	if (cmd[1])
-	{
-		ft_putstr_fd("pwd: Too many arguments\n", 2);
-		return (1);
-	}
 	if (getcwd(cwd, 4096))
 	{
 		if (printf("%s\n", cwd) == -1)
