@@ -12,15 +12,16 @@
 
 #include "../../inc/minishell.h"
 
-int	redir_init(t_redir *redir, t_data *data)
+void	redir_init(t_redir *redir, t_data *data)
 {
-	redir->fdin = -1;
-	redir->fdout = -1;
+	(*redir).fdin = -1;
+	(*redir).fdout = -1;
+	(*redir).file_fdin = -1;
+	(*redir).file_fdout = -1;
 	(*redir).tmp_fdin = dup(STDIN_FILENO);
 	(*redir).tmp_fdout = dup(STDOUT_FILENO);
-	if (redir_in(redir, data->tokens) || redir_out(redir, data->tokens))
-		return (1);
-	return (0);
+	redir_in(redir, data->tokens);
+	redir_out(redir, data->tokens);
 }
 
 void	redir_end(t_redir redir, int pid)
@@ -54,13 +55,13 @@ int	redir_in(t_redir *redir, t_token *tokens)
 				fd = heredoc(tokens->content);
 			if (fd < 0)
 				return (handle_error(tokens->content, 1));
-			(*redir).fdin = fd;
+			(*redir).file_fdin = fd;
 			trigger = true;
 		}
 		tokens = tokens->next;
 	}
 	if (!trigger)
-		(*redir).fdin = dup(redir->tmp_fdin);
+		(*redir).file_fdin = dup(redir->tmp_fdin);
 	return (0);
 }
 

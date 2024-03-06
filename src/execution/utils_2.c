@@ -95,6 +95,7 @@ void	close_fds_redir(t_redir redir)
 {
 	ft_close(redir.tmp_fdin);
 	ft_close(redir.tmp_fdout);
+	ft_close(redir.file_fdin);
 	ft_close(redir.file_fdout);
 	ft_close(redir.fdin);
 	ft_close(redir.fdout);

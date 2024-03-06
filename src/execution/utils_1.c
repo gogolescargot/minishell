@@ -61,7 +61,7 @@ void	ft_close_unlink(int fd, char *file)
 
 int	handle_error(char *str, int error_code)
 {
-	g_exit_code = errno;
+	g_exit_code = error_code;
 	perror(str);
 	return (error_code);
 }

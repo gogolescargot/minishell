@@ -20,10 +20,11 @@ void	commands_execute(t_data *data)
 
 	pid = -1;
 	i = 0;
-	if (redir_init(&redir, data))
-		return ;
+	redir_init(&redir, data);
 	while (data->cmd && data->cmd[i])
 	{
+		if (i == 0)
+			redir.fdin = redir.file_fdin;
 		dup2(redir.fdin, STDIN_FILENO);
 		ft_close(redir.fdin);
 		if (data->cmd[i + 1] == NULL)
@@ -35,7 +36,7 @@ void	commands_execute(t_data *data)
 		if (is_builtin(data->cmd[i][0]) != BUILTIN_NONE)
 			exec_builtin(data->cmd[i], data, redir, &pid);
 		else
-			exec_bin(data->cmd[i], data, redir, &pid);
+			exec_bin(data, i, redir, &pid);
 		i++;
 	}
 	redir_end(redir, pid);

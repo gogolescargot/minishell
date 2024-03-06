@@ -45,8 +45,7 @@ void	builtin_execute(char **cmd, t_data *data,
 {
 	t_redir	redir;
 
-	if (redir_init(&redir, data))
-		return ;
+	redir_init(&redir, data);
 	dup2(redir.fdin, STDIN_FILENO);
 	ft_close(redir.fdin);
 	redir.fdout = redir.file_fdout;
@@ -69,7 +68,7 @@ void	builtin_execute(char **cmd, t_data *data,
 	redir_end(redir, -1);
 }
 
-void	exec_bin(char **cmd, t_data *data, t_redir redir, pid_t *pid)
+void	exec_bin(t_data *data, size_t i, t_redir redir, pid_t *pid)
 {
 	int	error_code;
 
@@ -77,9 +76,13 @@ void	exec_bin(char **cmd, t_data *data, t_redir redir, pid_t *pid)
 	if (*pid == 0)
 	{
 		close_fds_redir(redir);
-		execve(cmd[0], cmd, data->envp);
+		if (i == 0 && redir.file_fdin == -1)
+			secure_exit(&data, 1);
+		else if (i == data->cmd_nbr - 1 && redir.file_fdout == -1)
+			secure_exit(&data, 1);
+		execve(data->cmd[i][0], data->cmd[i], data->envp);
 		error_code = errno;
-		perror(cmd[0]);
+		perror(data->cmd[i][0]);
 		secure_exit(&data, error_code);
 	}
 }
@@ -114,7 +117,8 @@ void	execution(t_data *data)
 {
 	if (!data->tokens)
 		return ;
-	data->cmd = ft_calloc(get_cmd_nbr(data->tokens) + 1, sizeof(char **));
+	data->cmd_nbr = get_cmd_nbr(data->tokens);
+	data->cmd = ft_calloc(data->cmd_nbr + 1, sizeof(char **));
 	if (!data->cmd)
 		secure_exit(&data, 1);
 	if (commands_fill(*data))

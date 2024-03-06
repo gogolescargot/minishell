@@ -71,6 +71,7 @@ typedef struct s_expand
 
 typedef struct s_redir
 {
+	int		file_fdin;
 	int		file_fdout;
 	int		fdin;
 	int		fdout;
@@ -83,6 +84,7 @@ typedef struct s_data
 	t_token	*tokens;
 	t_list	*envp_lst;
 	char	***cmd;
+	size_t	cmd_nbr;
 	char	**envp;
 	char	*line;
 }	t_data;
@@ -135,12 +137,12 @@ void				close_fds_redir(t_redir redir);
 int					handle_error(char *str, int error_code);
 
 void				wait_process(int pid);
-void				exec_bin(char **cmd, t_data *data,
+void				exec_bin(t_data *data, size_t i,
 						t_redir redir, pid_t *pid);
 void				exec_builtin(char **args, t_data *data,
 						t_redir redir, pid_t *pid);
 
-int					redir_init(t_redir *redir, t_data *data);
+void				redir_init(t_redir *redir, t_data *data);
 void				redir_end(t_redir redir, int pid);
 int					redir_in(t_redir *redir, t_token *tokens);
 int					redir_pipe(t_redir *redir);
