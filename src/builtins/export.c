@@ -64,16 +64,17 @@ int	export_check(char *cmd, t_list *envp, t_list **current)
 	size_t	i;
 	char	*name;
 
-	i = 0;
 	*current = envp;
-	while (cmd[i] && cmd[i] != '=' && !is_space(cmd[i]))
+	i = -1;
+	while (cmd[++i] && cmd[i] != '=' && !is_space(cmd[i]))
 	{
 		if (is_operator(cmd + i) != WORD || ft_isdigit(cmd[i])
 			|| is_quote(cmd[i]))
-			return (-1);
-		i++;
+			return (1);
 	}
-	if (cmd[i] != '=' || i == 0)
+	if (cmd[i] == '=' && i == 0)
+		return (-1);
+	else if (!cmd[i])
 		return (0);
 	name = ft_substr(cmd, 0, i);
 	if (!name)

@@ -21,7 +21,7 @@
 # include <errno.h>
 # include <fcntl.h>
 # include <sys/stat.h>
-# include <sys/wait.h> 
+# include <sys/wait.h>
 # include <readline/readline.h>
 # include <readline/history.h>
 # include "../libft/inc/libft.h"
@@ -139,7 +139,7 @@ int					handle_error(char *str, int error_code);
 void				wait_process(int pid);
 void				exec_bin(t_data *data, size_t i,
 						t_redir redir, pid_t *pid);
-void				exec_builtin(char **args, t_data *data,
+void				exec_builtin(t_data *data, size_t i,
 						t_redir redir, pid_t *pid);
 
 void				redir_init(t_redir *redir, t_data *data);

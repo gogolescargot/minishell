@@ -12,32 +12,34 @@
 
 #include "../../inc/minishell.h"
 
-void	exec_builtin(char **args, t_data *data,
+void	exec_builtin(t_data *data, size_t i,
 	t_redir redir, pid_t *pid)
 {
 	enum e_builtin	type;
 
-	type = is_builtin(args[0]);
+	type = is_builtin(data->cmd[i][0]);
 	*pid = fork();
-	if (*pid == 0)
-	{
-		close_fds_redir(redir);
-		if (type == ECHO)
-			g_exit_code = ft_echo(args);
-		else if (type == CD)
-			g_exit_code = ft_cd(args, data->envp_lst);
-		else if (type == PWD)
-			g_exit_code = ft_pwd();
-		else if (type == EXPORT)
-			g_exit_code = ft_export(args, data->envp_lst);
-		else if (type == UNSET)
-			g_exit_code = ft_unset(args, data->envp_lst);
-		else if (type == ENV)
-			g_exit_code = ft_env(data->envp_lst);
-		else if (type == EXIT)
-			g_exit_code = ft_exit(args, data);
-		secure_exit(&data, g_exit_code);
-	}
+	if (*pid != 0)
+		return ;
+	close_fds_redir(redir);
+	if ((i == 0 && redir.file_fdin == -1)
+		|| (i == data->cmd_nbr - 1 && redir.file_fdout == -1))
+		secure_exit(&data, 1);
+	if (type == ECHO)
+		g_exit_code = ft_echo(data->cmd[i]);
+	else if (type == CD)
+		g_exit_code = ft_cd(data->cmd[i], data->envp_lst);
+	else if (type == PWD)
+		g_exit_code = ft_pwd();
+	else if (type == EXPORT)
+		g_exit_code = ft_export(data->cmd[i], data->envp_lst);
+	else if (type == UNSET)
+		g_exit_code = ft_unset(data->cmd[i], data->envp_lst);
+	else if (type == ENV)
+		g_exit_code = ft_env(data->envp_lst);
+	else if (type == EXIT)
+		g_exit_code = ft_exit(data->cmd[i], data);
+	secure_exit(&data, g_exit_code);
 }
 
 void	builtin_execute(char **cmd, t_data *data,
@@ -46,7 +48,7 @@ void	builtin_execute(char **cmd, t_data *data,
 	t_redir	redir;
 
 	redir_init(&redir, data);
-	dup2(redir.fdin, STDIN_FILENO);
+	dup2(redir.file_fdin, STDIN_FILENO);
 	ft_close(redir.fdin);
 	redir.fdout = redir.file_fdout;
 	dup2(redir.fdout, STDOUT_FILENO);
@@ -70,7 +72,7 @@ void	builtin_execute(char **cmd, t_data *data,
 
 void	exec_bin(t_data *data, size_t i, t_redir redir, pid_t *pid)
 {
-	int	error_code;
+	int		error_code;
 
 	*pid = fork();
 	if (*pid == 0)
@@ -83,6 +85,10 @@ void	exec_bin(t_data *data, size_t i, t_redir redir, pid_t *pid)
 		execve(data->cmd[i][0], data->cmd[i], data->envp);
 		error_code = errno;
 		perror(data->cmd[i][0]);
+		if (error_code == 2)
+			error_code = 127;
+		else
+			error_code = 126;
 		secure_exit(&data, error_code);
 	}
 }
