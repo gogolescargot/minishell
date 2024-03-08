@@ -61,7 +61,7 @@ enum e_tokentype	is_operator(char *str)
 		return (I_FILE);
 	else if (str[0] == '|')
 		return (PIPE);
-	else if (str[0] != ' ')
+	else if (!is_space(str[0]))
 		return (WORD);
 	return (TOKEN_NONE);
 }

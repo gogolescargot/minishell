@@ -42,7 +42,7 @@ INCL	=	$(addsuffix .h, $(addprefix $(INCL_DIR), $(FILE_H)))
 
 # COMMANDS =====================================================================
 
-CC			=	gcc
+CC			=	cc
 
 CC_FLAGS	=	-Wall -Wextra -Werror -g3
 
