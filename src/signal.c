@@ -23,3 +23,11 @@ void	signal_handler(int code)
 		g_exit_code = 130;
 	}
 }
+
+void	signal_handler_fork(int code)
+{
+	if (code == 2)
+	{
+		g_exit_code = 130;
+	}
+}

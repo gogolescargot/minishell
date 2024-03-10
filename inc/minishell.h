@@ -135,6 +135,7 @@ void				ft_close(int fd);
 void				ft_close_unlink(int fd, char *file);
 void				close_fds_redir(t_redir redir);
 int					handle_error(char *str, int error_code);
+void				signal_handler_fork(int code);
 
 void				wait_process(int pid);
 void				exec_bin(t_data *data, size_t i,

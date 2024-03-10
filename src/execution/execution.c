@@ -74,6 +74,7 @@ void	exec_bin(t_data *data, size_t i, t_redir redir, pid_t *pid)
 {
 	int		error_code;
 
+	signal(SIGINT, signal_handler_fork);
 	*pid = fork();
 	if (*pid == 0)
 	{

@@ -59,8 +59,6 @@ t_data	*init_minishell(int argc, char **argv, char **envp)
 	data->cmd = NULL;
 	(void)argc;
 	(void)argv;
-	signal(SIGINT, signal_handler);
-	signal(SIGQUIT, SIG_IGN);
 	return (data);
 }
 
@@ -73,20 +71,19 @@ int	main(int argc, char **argv, char **envp)
 		return (1);
 	while (1)
 	{
+		signal(SIGINT, signal_handler);
+		signal(SIGQUIT, SIG_IGN);
 		data->line = readline("minishell > ");
 		if (!data->line)
 			break ;
-		else
-		{
-			add_history(data->line);
-			lexer(data);
-			if (!data->tokens)
-				continue ;
-			expander(data);
-			execution(data);
-			ft_free(data->line);
-			token_clear(&data->tokens, ft_free);
-		}
+		add_history(data->line);
+		lexer(data);
+		if (!data->tokens)
+			continue ;
+		expander(data);
+		execution(data);
+		ft_free(data->line);
+		token_clear(&data->tokens, ft_free);
 	}
 	ft_lstclear(&data->envp_lst, ft_free);
 	printf("exit\n");
