@@ -70,7 +70,7 @@ int	export_check(char *cmd, t_list *envp, t_list **current)
 	{
 		if (is_operator(cmd + i) != WORD || ft_isdigit(cmd[i])
 			|| is_quote(cmd[i]))
-			return (1);
+			return (-1);
 	}
 	if (cmd[i] == '=' && i == 0)
 		return (-1);

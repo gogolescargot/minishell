@@ -25,23 +25,22 @@ void	secure_exit(t_data **data, int error_code)
 	exit(error_code);
 }
 
-t_list	*init_envp(char **envp)
+int	init_envp(char **envp, t_list **envp_lst)
 {
 	size_t	i;
-	t_list	*envp_lst;
 	t_list	*node;
 
 	i = 0;
-	envp_lst = NULL;
+	*envp_lst = NULL;
 	while (envp[i])
 	{
 		node = ft_lstnew(ft_strdup(envp[i]));
 		if (!node)
-			return (ft_lstclear(&envp_lst, ft_free), NULL);
-		ft_lstadd_back(&envp_lst, node);
+			return (ft_lstclear(&*envp_lst, ft_free), 1);
+		ft_lstadd_back(&*envp_lst, node);
 		i++;
 	}
-	return (envp_lst);
+	return (0);
 }
 
 t_data	*init_minishell(int argc, char **argv, char **envp)
@@ -52,9 +51,7 @@ t_data	*init_minishell(int argc, char **argv, char **envp)
 	if (!data)
 		return (NULL);
 	data->envp = envp;
-	data->envp_lst = init_envp(envp);
-	if (!data->envp_lst)
-		return (NULL);
+	init_envp(envp, &data->envp_lst);
 	data->tokens = NULL;
 	data->cmd = NULL;
 	(void)argc;
