@@ -83,6 +83,6 @@ int	main(int argc, char **argv, char **envp)
 		token_clear(&data->tokens, ft_free);
 	}
 	ft_lstclear(&data->envp_lst, ft_free);
-	printf("exit\n");
+	printf("\nexit\n");
 	secure_exit(&data, g_exit_code);
 }
