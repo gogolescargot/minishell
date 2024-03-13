@@ -44,13 +44,13 @@ INCL	=	$(addsuffix .h, $(addprefix $(INCL_DIR), $(FILE_H)))
 
 CC			=	cc
 
-CC_FLAGS	=	-Wall -Wextra -Werror -g3
+CC_FLAGS	=	-Wall -Wextra -Werror
 
 AR			=	ar
 
 AR_FLAGS	=	-rc
 
-NORM		=	norminette.exe $(SRCS_DIR) $(INCL_DIR)
+NORM		=	norminette $(SRCS_DIR) $(INCL_DIR)
 
 # RULES ========================================================================
 
@@ -63,7 +63,7 @@ all:
 	@ $(MAKE) --no-print-directory $(NAME)
 	@ echo "\n${BIGreen}Project Ready !${NC}\n"
 
-$(NAME): $(OBJS)
+$(NAME): $(OBJS) $(LIBFT)
 	@ echo "\n${BICyan}Creating the executable...${NC}"
 	$(CC) $(CC_FLAGS) $(OBJS) $(LIBFT) -o $(NAME) -L/usr/local/lib -lreadline
 

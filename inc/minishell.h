@@ -116,9 +116,9 @@ int					ft_echo(char **cmd);
 int					ft_env(t_list *envp);
 int					ft_pwd(void);
 int					ft_exit(char **cmd, t_data *data);
-int					ft_cd(char **cmd, t_list *envp);
-int					ft_export(char **cmd, t_list *envp);
-int					ft_unset(char **cmd, t_list *envp);
+int					ft_cd(char **cmd, t_list **envp);
+int					ft_export(char **cmd, t_list **envp);
+int					ft_unset(char **cmd, t_list **envp);
 
 void				signal_handler(int code);
 

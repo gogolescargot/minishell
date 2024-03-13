@@ -102,7 +102,7 @@ void	export_replace(char **cmd, t_list *target, size_t i)
  * @return 0 on success, 1 in case of error
  */
 
-int	ft_export(char **cmd, t_list *envp)
+int	ft_export(char **cmd, t_list **envp)
 {
 	int		check;
 	t_list	*target;
@@ -112,11 +112,11 @@ int	ft_export(char **cmd, t_list *envp)
 	if (!cmd)
 		return (1);
 	if (!cmd[i])
-		return (export_print(envp));
+		return (export_print(*envp));
 	while (cmd[i])
 	{
 		target = NULL;
-		check = export_check(cmd[i], envp, &target);
+		check = export_check(cmd[i], *envp, &target);
 		if (check == -2)
 			return (export_error(NULL), 1);
 		else if (check == -1)
@@ -124,7 +124,7 @@ int	ft_export(char **cmd, t_list *envp)
 		else if (check == 1)
 			export_replace(cmd, target, i);
 		else if (check == 2)
-			ft_lstadd_back(&envp, ft_lstnew(ft_strdup(cmd[i])));
+			ft_lstadd_back(envp, ft_lstnew(ft_strdup(cmd[i])));
 		i++;
 	}
 	return (0);

@@ -22,7 +22,7 @@
 int	ft_env(t_list *envp)
 {
 	if (!envp)
-		return (1);
+		return (0);
 	while (envp)
 	{
 		if (printf("%s\n", (char *)envp->content) == -1)

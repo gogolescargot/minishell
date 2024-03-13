@@ -20,21 +20,21 @@
  * @param current A pointer to the previous linked list node
  */
 
-void	unset_pop(t_list *envp, t_list *current, t_list *prev)
+void	unset_pop(t_list **envp, t_list *current, t_list *prev)
 {
 	if (prev)
 	{
 		prev->next = current->next;
-		free(current->content);
-		free(current);
+		ft_free(current->content);
+		ft_free(current);
 		current = prev->next;
 	}
 	else
 	{
-		envp = current->next;
-		free(current->content);
-		free(current);
-		current = envp;
+		*envp = current->next;
+		ft_free(current->content);
+		ft_free(current);
+		current = *envp;
 	}
 }
 
@@ -46,7 +46,7 @@ void	unset_pop(t_list *envp, t_list *current, t_list *prev)
  * @param current A pointer to the previous linked list node
  */
 
-void	unset_utils(t_list *envp, t_list *current, t_list *prev, char *cmd)
+void	unset_utils(t_list **envp, t_list *current, t_list *prev, char *cmd)
 {
 	while (current)
 	{
@@ -71,7 +71,7 @@ void	unset_utils(t_list *envp, t_list *current, t_list *prev, char *cmd)
  * @return 0 on success, 1 in case of error
  */
 
-int	ft_unset(char **cmd, t_list *envp)
+int	ft_unset(char **cmd, t_list **envp)
 {
 	t_list	*current;
 	t_list	*prev;
@@ -83,7 +83,7 @@ int	ft_unset(char **cmd, t_list *envp)
 	while (cmd[i])
 	{
 		prev = NULL;
-		current = envp;
+		current = *envp;
 		unset_utils(envp, current, prev, cmd[i]);
 		i++;
 	}

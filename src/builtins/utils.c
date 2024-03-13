@@ -87,7 +87,7 @@ bool	update_env(t_list *envp_lst, char *key, char *value)
 		envp_lst = envp_lst->next;
 	}
 	if (!envp_lst)
-		return (true);
+		return (ft_free(str), true);
 	ft_free(envp_lst->content);
 	envp_lst->content = str;
 	return (true);

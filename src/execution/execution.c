@@ -28,13 +28,13 @@ void	exec_builtin(t_data *data, size_t i,
 	if (type == ECHO)
 		g_exit_code = ft_echo(data->cmd[i]);
 	else if (type == CD)
-		g_exit_code = ft_cd(data->cmd[i], data->envp_lst);
+		g_exit_code = ft_cd(data->cmd[i], &data->envp_lst);
 	else if (type == PWD)
 		g_exit_code = ft_pwd();
 	else if (type == EXPORT)
-		g_exit_code = ft_export(data->cmd[i], data->envp_lst);
+		g_exit_code = ft_export(data->cmd[i], &data->envp_lst);
 	else if (type == UNSET)
-		g_exit_code = ft_unset(data->cmd[i], data->envp_lst);
+		g_exit_code = ft_unset(data->cmd[i], &data->envp_lst);
 	else if (type == ENV)
 		g_exit_code = ft_env(data->envp_lst);
 	else if (type == EXIT)
@@ -56,13 +56,13 @@ void	builtin_execute(char **cmd, t_data *data,
 	if (type == ECHO)
 		g_exit_code = ft_echo(cmd);
 	else if (type == CD)
-		g_exit_code = ft_cd(cmd, data->envp_lst);
+		g_exit_code = ft_cd(cmd, &data->envp_lst);
 	else if (type == PWD)
 		g_exit_code = ft_pwd();
 	else if (type == EXPORT)
-		g_exit_code = ft_export(cmd, data->envp_lst);
+		g_exit_code = ft_export(cmd, &data->envp_lst);
 	else if (type == UNSET)
-		g_exit_code = ft_unset(cmd, data->envp_lst);
+		g_exit_code = ft_unset(cmd, &data->envp_lst);
 	else if (type == ENV)
 		g_exit_code = ft_env(data->envp_lst);
 	else if (type == EXIT)
